@@ -5,20 +5,20 @@ A modern social media platform for anime fans to connect, track their anime jour
 ## Features
 
 ### Phase 1: Core Social Foundation (Current)
-- ✅ User Authentication (Email/Password + Google OAuth)
-- ✅ Rich User Profiles with anime preferences
-- 🚧 Anime Database Integration (Coming Soon)
-- 🚧 Personal Tracking Lists (Coming Soon)
+- ✅ **User Authentication** - Secure login system with email/password and Google OAuth integration for seamless onboarding
+- ✅ **Rich User Profiles** - Customizable profiles featuring favorite anime, bio, avatar, and personal anime preferences showcase
+- 🚧 **Anime Database Integration** - Integration with MyAnimeList API for comprehensive anime data including ratings, genres, studio info, and episode details
+- 🚧 **Personal Tracking Lists** - Individual anime lists for "Watching", "Completed", "Plan to Watch", "On Hold", and "Dropped" with progress tracking and personal ratings
 
 ### Phase 2: Social Connection Engine (Planned)
-- 🚧 Taste-Matching Algorithm
-- 🚧 Automatic Taste-Clusters
-- 🚧 Private Cluster Hubs
+- 🚧 **Taste-Matching Algorithm** - AI-powered system that analyzes viewing patterns, ratings, and preferences to find users with similar anime tastes and recommend new connections
+- 🚧 **Automatic Taste-Clusters** - Machine learning algorithm that groups users into niche communities based on their anime preferences (e.g., "Shounen Battle Fans", "Slice-of-Life Enthusiasts", "Mecha Purists")
+- 🚧 **Private Cluster Hubs** - Exclusive chat rooms and discussion spaces for members of each taste cluster, fostering deeper conversations among like-minded fans
 
 ### Phase 3: Dynamic Community Hubs (Planned)
-- 🚧 Living Community Hubs per anime
-- 🚧 Episode Live-Lounges
-- 🚧 Watch Party Coordination
+- 🚧 **Living Community Hubs per anime** - Dynamic discussion spaces for each anime series with real-time updates, fan art galleries, theory discussions, and community-driven content
+- 🚧 **Episode Live-Lounges** - Real-time chat rooms that open during episode air times, with built-in spoiler protection and synchronized discussion threads
+- 🚧 **Watch Party Coordination** - Tools to organize synchronized viewing sessions with friends, complete with video sync, voice chat integration, and shared reactions
 
 ## Tech Stack
 
@@ -114,19 +114,22 @@ CREATE TABLE profiles (
 ## Development Roadmap
 
 - [ ] **Phase 1**: Complete core social foundation
-  - [ ] Anime database integration (MyAnimeList API)
-  - [ ] Personal tracking lists (Watching, Completed, Plan to Watch)
-  - [ ] Episode-level progress logging
+  - [ ] **Anime Database Integration** - Connect with MyAnimeList API for real-time anime data, ratings, and metadata
+  - [ ] **Personal Tracking Lists** - Build comprehensive anime tracking system with status updates and progress logging
+  - [ ] **Episode-level Progress Logging** - Granular tracking of episode viewing with timestamps and notes
+  - [ ] **Advanced Profile Customization** - Custom themes, badges, and anime milestone achievements
   
 - [ ] **Phase 2**: Build social connection engine
-  - [ ] Implement taste-matching algorithm
-  - [ ] Create taste-clusters system
-  - [ ] Build private cluster hubs
+  - [ ] **Taste-Matching Algorithm** - Develop ML model using collaborative filtering and content-based recommendations
+  - [ ] **Taste-Clusters System** - Implement clustering algorithms to automatically group users by viewing patterns
+  - [ ] **Private Cluster Hubs** - Create secure, invite-only spaces for niche anime communities
+  - [ ] **Smart Friend Recommendations** - AI-powered suggestions based on compatibility scores and shared interests
   
 - [ ] **Phase 3**: Launch community features
-  - [ ] Living community hubs per anime
-  - [ ] Episode live-lounges with spoiler protection
-  - [ ] Watch party coordination
+  - [ ] **Living Community Hubs** - Real-time discussion boards with moderation tools and content curation
+  - [ ] **Episode Live-Lounges** - Synchronized chat rooms with spoiler tags and reaction tracking
+  - [ ] **Watch Party Coordination** - Video synchronization engine with voice/text chat integration
+  - [ ] **Community Events** - Anime tournament brackets, seasonal watch challenges, and fan art contests
 
 ## Contributing
 
