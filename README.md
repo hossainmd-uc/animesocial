@@ -11,7 +11,8 @@ A modern social media platform for anime fans to connect, track their anime jour
 - 🚧 **Personal Tracking Lists** - Individual anime lists for "Watching", "Completed", "Plan to Watch", "On Hold", and "Dropped" with progress tracking and personal ratings
 
 ### Phase 2: Social Connection Engine (Planned)
-- 🚧 **Taste-Matching Algorithm** - AI-powered system that analyzes viewing patterns, ratings, and preferences to find users with similar anime tastes and recommend new connections
+- 🚧 **Taste-Matching Algorithm** - AI-powered system that analyzes viewing patterns, ratings, and preferences to both find users with similar anime tastes AND recommend personalized anime discoveries
+- 🚧 **Smart Anime Recommendations** - Personalized anime discovery engine using collaborative filtering and content analysis to suggest shows you'll love based on your unique taste profile
 - 🚧 **Automatic Taste-Clusters** - Machine learning algorithm that groups users into niche communities based on their anime preferences (e.g., "Shounen Battle Fans", "Slice-of-Life Enthusiasts", "Mecha Purists")
 - 🚧 **Private Cluster Hubs** - Exclusive chat rooms and discussion spaces for members of each taste cluster, fostering deeper conversations among like-minded fans
 
@@ -120,10 +121,12 @@ CREATE TABLE profiles (
   - [ ] **Advanced Profile Customization** - Custom themes, badges, and anime milestone achievements
   
 - [ ] **Phase 2**: Build social connection engine
-  - [ ] **Taste-Matching Algorithm** - Develop ML model using collaborative filtering and content-based recommendations
-  - [ ] **Taste-Clusters System** - Implement clustering algorithms to automatically group users by viewing patterns
+  - [ ] **Taste-Matching Algorithm** - Develop ML model using collaborative filtering and content-based recommendations for both social and anime discovery
+  - [ ] **Smart Anime Recommendations** - Multi-layered recommendation system combining user ratings, viewing history, genre preferences, and similar user behavior
+  - [ ] **Taste-Clusters System** - Implement clustering algorithms to automatically group users by viewing patterns and recommendation preferences
   - [ ] **Private Cluster Hubs** - Create secure, invite-only spaces for niche anime communities
   - [ ] **Smart Friend Recommendations** - AI-powered suggestions based on compatibility scores and shared interests
+  - [ ] **Personalized Discovery Feed** - Dynamic home feed featuring recommended anime, trending shows in your taste cluster, and friend activity
   
 - [ ] **Phase 3**: Launch community features
   - [ ] **Living Community Hubs** - Real-time discussion boards with moderation tools and content curation
