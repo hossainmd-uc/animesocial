@@ -3,16 +3,7 @@
 import { useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import ProfileEditForm from './ProfileEditForm'
-
-interface Profile {
-  id: string
-  username?: string
-  full_name?: string
-  bio?: string
-  favorite_anime?: string
-  avatar_url?: string
-  created_at: string
-}
+import { Profile } from '@/src/types/profile'
 
 interface ProfileCardProps {
   user: User
@@ -21,6 +12,86 @@ interface ProfileCardProps {
 
 export default function ProfileCard({ user, profile }: ProfileCardProps) {
   const [isEditing, setIsEditing] = useState(false)
+  const [isEditingStatus, setIsEditingStatus] = useState(false)
+  const [statusText, setStatusText] = useState(profile?.status || '')
+  const [statusLoading, setStatusLoading] = useState(false)
+  const [isEditingBio, setIsEditingBio] = useState(false)
+  const [bioText, setBioText] = useState(profile?.bio || '')
+  const [bioLoading, setBioLoading] = useState(false)
+
+  const handleStatusUpdate = async () => {
+    setStatusLoading(true)
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status: statusText,
+                     // Include current profile data to avoid overwriting
+           username: profile?.username,
+           displayName: profile?.displayName,
+           bio: profile?.bio,
+           favoriteAnime: profile?.favoriteAnime,
+           avatarUrl: profile?.avatarUrl,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update status')
+      }
+
+      setIsEditingStatus(false)
+      window.location.reload() // Refresh to show updated data
+    } catch (error) {
+      console.error('Error updating status:', error)
+      // Reset to original value on error
+      setStatusText(profile?.status || '')
+    } finally {
+      setStatusLoading(false)
+    }
+  }
+
+  const handleStatusCancel = () => {
+    setStatusText(profile?.status || '')
+    setIsEditingStatus(false)
+  }
+
+  const handleBioUpdate = async () => {
+    setBioLoading(true)
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          bio: bioText,
+          // Include current profile data to avoid overwriting
+          username: profile?.username,
+          displayName: profile?.displayName,
+          status: profile?.status,
+          favoriteAnime: profile?.favoriteAnime,
+          avatarUrl: profile?.avatarUrl,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update bio')
+      }
+
+      setIsEditingBio(false)
+      window.location.reload() // Refresh to show updated data
+    } catch (error) {
+      console.error('Error updating bio:', error)
+      // Reset to original value on error
+      setBioText(profile?.bio || '')
+    } finally {
+      setBioLoading(false)
+    }
+  }
+
+  const handleBioCancel = () => {
+    setBioText(profile?.bio || '')
+    setIsEditingBio(false)
+  }
 
   if (isEditing) {
     return (
@@ -34,54 +105,197 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
   }
 
   return (
-    <div className="bg-white overflow-hidden shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div className="h-16 w-16 bg-gray-300 rounded-full flex items-center justify-center">
-              {profile?.avatar_url ? (
+    <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm h-96 flex flex-col">
+      {/* Action buttons */}
+      <div className="flex justify-end space-x-2 mb-6">
+        <button
+          onClick={() => setIsEditing(true)}
+          className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-200"
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+        </button>
+        <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-200">
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Profile content - using flex-1 and proper overflow handling */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Top section with avatar and status */}
+        <div className="flex items-start space-x-4 mb-6">
+          {/* Avatar with username below */}
+          <div className="flex-shrink-0 text-center">
+            <div className="relative mb-2">
+              {profile?.avatarUrl ? (
                 <img
-                  className="h-16 w-16 rounded-full"
-                  src={profile.avatar_url}
+                  className="h-16 w-16 rounded-full border-4 border-gray-300"
+                  src={profile.avatarUrl}
                   alt="Profile"
                 />
               ) : (
-                <span className="text-xl font-medium text-gray-600">
-                  {(profile?.full_name || user.email)?.charAt(0).toUpperCase()}
+                <div className="h-16 w-16 bg-gray-400 rounded-full flex items-center justify-center border-4 border-gray-300">
+                  <span className="text-xl text-white">👤</span>
+                </div>
+              )}
+              {/* Online status indicator */}
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 border-2 border-white rounded-full"></div>
+            </div>
+            
+            {/* Display name and username below avatar */}
+            <div className="text-center">
+              <div className="text-sm font-semibold text-gray-900 mb-1">
+                {profile?.displayName || profile?.username || 'User'}
+              </div>
+              <div className="bg-blue-100 border border-blue-200 rounded-md px-2 py-1 inline-block">
+                <span className="text-xs font-medium text-blue-800">
+                  @{profile?.username || 'username'}
                 </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Profile info */}
+          <div className="flex-1 min-w-0">
+            {/* Status message */}
+            <div className="mb-3">
+              {isEditingStatus ? (
+                <div className="bg-white border-2 border-blue-500 rounded-2xl px-4 py-3 max-w-full">
+                  <div className="flex items-start space-x-2">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <input
+                        type="text"
+                        value={statusText}
+                        onChange={(e) => setStatusText(e.target.value)}
+                        className="w-full text-sm text-gray-900 bg-transparent border-none outline-none placeholder-gray-400"
+                        placeholder="Share what you're watching or thinking about anime..."
+                        maxLength={100}
+                        autoFocus
+                        disabled={statusLoading}
+                      />
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-gray-400">{statusText.length}/100</span>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={handleStatusCancel}
+                            className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded"
+                            disabled={statusLoading}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleStatusUpdate}
+                            className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
+                            disabled={statusLoading}
+                          >
+                            {statusLoading ? 'Saving...' : 'Save'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div 
+                  className={`rounded-2xl px-4 py-3 inline-block max-w-full relative cursor-pointer transition-colors hover:bg-opacity-80 ${
+                    profile?.status && profile.status.trim() !== '' 
+                      ? 'bg-gray-200 hover:bg-gray-300' 
+                      : 'bg-gray-100 border-2 border-dashed border-gray-300 hover:border-gray-400'
+                  }`}
+                  onClick={() => setIsEditingStatus(true)}
+                >
+                  <div className="flex items-start space-x-2">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <svg className={`w-3 h-3 ${
+                        profile?.status && profile.status.trim() !== '' 
+                          ? 'text-gray-500' 
+                          : 'text-gray-400'
+                      }`} fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <p className={`text-sm break-words flex-1 ${
+                      profile?.status && profile.status.trim() !== '' 
+                        ? 'text-gray-700' 
+                        : 'text-gray-500 italic'
+                    }`}>
+                      {profile?.status && profile.status.trim() !== '' 
+                        ? profile.status 
+                        : 'Click to share what you\'re watching or thinking about anime...'
+                      }
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           </div>
-          <div className="ml-4">
-            <h3 className="text-lg font-medium text-gray-900">
-              {profile?.full_name || 'Anime Fan'}
-            </h3>
-            <p className="text-sm text-gray-500">
-              @{profile?.username || 'new_user'}
-            </p>
-          </div>
         </div>
-        
-        <div className="mt-4">
-          <p className="text-sm text-gray-600">
-            {profile?.bio || 'No bio yet - add one to tell others about your anime preferences!'}
-          </p>
-        </div>
-        
-        {profile?.favorite_anime && (
-          <div className="mt-4">
-            <p className="text-sm font-medium text-gray-900">Favorite Anime:</p>
-            <p className="text-sm text-gray-600">{profile.favorite_anime}</p>
+
+        {/* Bio Section - with proper overflow handling */}
+        <div className="border-t border-gray-300 pt-4 flex-1 flex flex-col min-h-0">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Bio</h3>
+          <div className="flex-1 overflow-hidden">
+            {isEditingBio ? (
+              <div className="bg-white border-2 border-blue-500 rounded-lg px-4 py-3 h-full flex flex-col">
+                <textarea
+                  value={bioText}
+                  onChange={(e) => setBioText(e.target.value)}
+                  className="w-full flex-1 text-sm text-gray-900 bg-transparent border-none outline-none placeholder-gray-400 resize-none"
+                  placeholder="Tell everyone about your anime journey, favorite genres, or what you're currently watching..."
+                  maxLength={500}
+                  autoFocus
+                  disabled={bioLoading}
+                />
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-gray-400">{bioText.length}/500</span>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={handleBioCancel}
+                      className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded"
+                      disabled={bioLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleBioUpdate}
+                      className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
+                      disabled={bioLoading}
+                    >
+                      {bioLoading ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div 
+                className={`rounded-lg px-4 py-3 h-full cursor-pointer transition-colors hover:bg-opacity-80 overflow-y-auto ${
+                  profile?.bio && profile.bio.trim() !== '' 
+                    ? 'bg-gray-50 hover:bg-gray-100' 
+                    : 'bg-gray-50 border-2 border-dashed border-gray-300 hover:border-gray-400'
+                }`}
+                onClick={() => setIsEditingBio(true)}
+              >
+                <div className={`text-sm leading-relaxed whitespace-pre-line ${
+                  profile?.bio && profile.bio.trim() !== '' 
+                    ? 'text-gray-700' 
+                    : 'text-gray-500 italic'
+                }`}>
+                  {profile?.bio && profile.bio.trim() !== '' 
+                    ? profile.bio 
+                    : 'Click to tell everyone about your anime journey, favorite genres, or what you\'re currently watching...'
+                  }
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        
-        <div className="mt-4">
-          <button
-            onClick={() => setIsEditing(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
-          >
-            Edit Profile
-          </button>
         </div>
       </div>
     </div>

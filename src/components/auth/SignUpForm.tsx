@@ -1,24 +1,82 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/src/lib/supabase/client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 export default function SignUpForm() {
   const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [checkingUsername, setCheckingUsername] = useState(false)
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
+  const [usernameError, setUsernameError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
+  const checkUsernameAvailability = async (usernameToCheck: string) => {
+    if (!usernameToCheck || usernameToCheck.length < 3) {
+      setUsernameAvailable(null)
+      setUsernameError(null)
+      return
+    }
+
+    setCheckingUsername(true)
+    setUsernameError(null)
+
+    try {
+      const response = await fetch(`/api/auth/check-username?username=${encodeURIComponent(usernameToCheck)}`)
+      const data = await response.json()
+
+      if (data.error) {
+        setUsernameError(data.error)
+        setUsernameAvailable(false)
+      } else {
+        setUsernameAvailable(data.available)
+        if (!data.available) {
+          setUsernameError('Username is already taken')
+        }
+      }
+    } catch (error) {
+      setUsernameError('Error checking username availability')
+      setUsernameAvailable(false)
+    } finally {
+      setCheckingUsername(false)
+    }
+  }
+
+  const handleUsernameChange = (value: string) => {
+    setUsername(value)
+    // Debounce username checking
+    clearTimeout((globalThis as any).usernameTimeout)
+    ;(globalThis as any).usernameTimeout = setTimeout(() => {
+      checkUsernameAvailability(value)
+    }, 500)
+  }
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
+    // Validation
+    if (!username.trim()) {
+      setError('Username is required')
+      setLoading(false)
+      return
+    }
+
+    if (usernameAvailable === false) {
+      setError('Please choose an available username')
+      setLoading(false)
+      return
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -31,6 +89,10 @@ export default function SignUpForm() {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          username: username.trim(),
+          display_name: displayName.trim() || null,
+        },
       },
     })
 
@@ -87,6 +149,52 @@ export default function SignUpForm() {
             placeholder="Email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className="relative">
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autoComplete="username"
+            required
+            className={`appearance-none rounded-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm ${
+              usernameAvailable === true ? 'border-green-500' : 
+              usernameAvailable === false ? 'border-red-500' : ''
+            }`}
+            placeholder="Username (3-20 characters)"
+            value={username}
+            onChange={(e) => handleUsernameChange(e.target.value)}
+          />
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+            {checkingUsername ? (
+              <div className="animate-spin h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
+            ) : usernameAvailable === true ? (
+              <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            ) : usernameAvailable === false ? (
+              <svg className="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L10 10.586l1.293-1.293a1 1 0 001.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            ) : null}
+          </div>
+        </div>
+        {usernameError && (
+          <div className="text-red-600 text-xs mt-1 px-3">
+            {usernameError}
+          </div>
+        )}
+        <div>
+          <input
+            id="display-name"
+            name="display-name"
+            type="text"
+            autoComplete="name"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            placeholder="Display name (optional)"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
           />
         </div>
         <div>

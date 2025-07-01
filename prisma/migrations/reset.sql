@@ -1,0 +1,12 @@
+-- Drop all anime-related tables
+DROP TABLE IF EXISTS "anime_themes" CASCADE;
+DROP TABLE IF EXISTS "anime_relations" CASCADE;
+DROP TABLE IF EXISTS "anime_external_links" CASCADE;
+DROP TABLE IF EXISTS "anime_streaming" CASCADE;
+DROP TABLE IF EXISTS "anime_producers" CASCADE;
+DROP TABLE IF EXISTS "anime_studios" CASCADE;
+DROP TABLE IF EXISTS "anime_genres" CASCADE;
+DROP TABLE IF EXISTS "producers" CASCADE;
+DROP TABLE IF EXISTS "studios" CASCADE;
+DROP TABLE IF EXISTS "genres" CASCADE;
+DROP TABLE IF EXISTS "animes" CASCADE; 

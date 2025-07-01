@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id            String          @id @db.Uuid
+  username      String          @unique
+  displayName   String?         @map("display_name")
+  bio           String?
+  favoriteAnime String?         @map("favorite_anime")
+  avatarUrl     String?         @map("avatar_url")
+  status        String?
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  animeList     UserAnimeList[]
+
+  @@index([username])
+  @@index([createdAt])
+  @@map("profiles")
+}
+
+model Anime {
+  id                String               @id @default(cuid())
+  malId             Int                  @unique @map("mal_id")
+  title             String
+  titleEnglish      String?              @map("title_english")
+  titleJapanese     String?              @map("title_japanese")
+  synopsis          String?
+  status            String
+  episodes          Int?
+  duration          String?
+  score             Float?
+  rank              Int?
+  popularity        Int?
+  membersCount      Int?                 @map("members_count")
+  favoritesCount    Int?                 @map("favorites_count")
+  rating            String?
+  type              String
+  source            String?
+  season            String?
+  year              Int?
+  airedFrom         DateTime?            @map("aired_from")
+  airedTo           DateTime?            @map("aired_to")
+  broadcastDay      String?              @map("broadcast_day")
+  broadcastTime     String?              @map("broadcast_time")
+  broadcastTimezone String?              @map("broadcast_timezone")
+  imageUrl          String               @map("image_url")
+  trailerUrl        String?              @map("trailer_url")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @default(now()) @updatedAt @map("updated_at")
+  externalLinks     AnimeExternalLinks[]
+  genres            AnimeGenres[]
+  producers         AnimeProducers[]
+  relations         AnimeRelations[]
+  streaming         AnimeStreaming[]
+  studios           AnimeStudios[]
+  themes            AnimeThemes[]
+  userList          UserAnimeList[]
+
+  @@map("animes")
+}
+
+model Genre {
+  id        String        @id @default(cuid())
+  malId     Int           @unique @map("mal_id")
+  name      String
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @default(now()) @updatedAt @map("updated_at")
+  animes    AnimeGenres[]
+
+  @@map("genres")
+}
+
+model Studio {
+  id        String         @id @default(cuid())
+  malId     Int            @unique @map("mal_id")
+  name      String
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at")
+  animes    AnimeStudios[]
+
+  @@map("studios")
+}
+
+model Producer {
+  id        String           @id @default(cuid())
+  malId     Int              @unique @map("mal_id")
+  name      String
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @default(now()) @updatedAt @map("updated_at")
+  animes    AnimeProducers[]
+
+  @@map("producers")
+}
+
+model AnimeGenres {
+  animeId   String   @map("anime_id")
+  genreId   String   @map("genre_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  id        String   @id @default(cuid())
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  anime     Anime    @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  genre     Genre    @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@unique([animeId, genreId])
+  @@map("anime_genres")
+}
+
+model AnimeStudios {
+  animeId   String   @map("anime_id")
+  studioId  String   @map("studio_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  id        String   @id @default(cuid())
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  anime     Anime    @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  @@unique([animeId, studioId])
+  @@map("anime_studios")
+}
+
+model AnimeProducers {
+  animeId    String   @map("anime_id")
+  producerId String   @map("producer_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  id         String   @id @default(cuid())
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
+  anime      Anime    @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  producer   Producer @relation(fields: [producerId], references: [id], onDelete: Cascade)
+
+  @@unique([animeId, producerId])
+  @@map("anime_producers")
+}
+
+model AnimeStreaming {
+  id           String   @id @default(cuid())
+  animeId      String   @map("anime_id")
+  platformName String   @map("platform_name")
+  url          String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+  anime        Anime    @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@map("anime_streaming")
+}
+
+model AnimeExternalLinks {
+  id        String   @id @default(cuid())
+  animeId   String   @map("anime_id")
+  name      String
+  url       String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  anime     Anime    @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@map("anime_external_links")
+}
+
+model AnimeRelations {
+  id           String   @id @default(cuid())
+  animeId      String   @map("anime_id")
+  relatedMalId Int      @map("related_mal_id")
+  relationType String   @map("relation_type")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+  anime        Anime    @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@map("anime_relations")
+}
+
+model AnimeThemes {
+  id        String   @id @default(cuid())
+  animeId   String   @map("anime_id")
+  type      String
+  number    Int
+  title     String
+  artist    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  anime     Anime    @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@map("anime_themes")
+}
+
+model UserAnimeList {
+  id         String    @id @default(cuid())
+  profileId  String    @map("profile_id") @db.Uuid
+  animeId    String    @map("anime_id")
+  status     String
+  progress   Int       @default(0)
+  score      Float?
+  notes      String?
+  isFavorite Boolean   @default(false) @map("is_favorite")
+  startDate  DateTime? @map("start_date")
+  finishDate DateTime? @map("finish_date")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at")
+  anime      Anime     @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  profile    Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, animeId])
+  @@index([profileId])
+  @@index([animeId])
+  @@map("user_anime_list")
+}
