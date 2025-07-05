@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import ProfileEditForm from './ProfileEditForm'
+import AvatarUpload from './AvatarUpload'
 import { Profile } from '@/src/types/profile'
 
 interface ProfileCardProps {
@@ -105,7 +106,9 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm h-96 flex flex-col">
+    <div className={`bg-white rounded-lg p-6 border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${
+      isEditingBio ? 'h-[500px]' : 'h-96'
+    }`}>
       {/* Action buttons */}
       <div className="flex justify-end space-x-2 mb-6">
         <button
@@ -129,20 +132,14 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
         <div className="flex items-start space-x-4 mb-6">
           {/* Avatar with username below */}
           <div className="flex-shrink-0 text-center">
-            <div className="relative mb-2">
-              {profile?.avatarUrl ? (
-                <img
-                  className="h-16 w-16 rounded-full border-4 border-gray-300"
-                  src={profile.avatarUrl}
-                  alt="Profile"
-                />
-              ) : (
-                <div className="h-16 w-16 bg-gray-400 rounded-full flex items-center justify-center border-4 border-gray-300">
-                  <span className="text-xl text-white">👤</span>
-                </div>
-              )}
-              {/* Online status indicator */}
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 border-2 border-white rounded-full"></div>
+            <div className="mb-2">
+              <AvatarUpload 
+                profile={profile} 
+                onAvatarUpdate={(avatarUrl) => {
+                  // Handle avatar update - could update local state here
+                  // but we're refreshing the page for now
+                }} 
+              />
             </div>
             
             {/* Display name and username below avatar */}
@@ -238,35 +235,35 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
             </div>
           </div>
         </div>
-
+        
         {/* Bio Section - with proper overflow handling */}
-        <div className="border-t border-gray-300 pt-4 flex-1 flex flex-col min-h-0">
+        <div className="pt-4 flex-1 flex flex-col min-h-0">
           <h3 className="text-sm font-semibold text-gray-900 mb-3">Bio</h3>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0">
             {isEditingBio ? (
-              <div className="bg-white border-2 border-blue-500 rounded-lg px-4 py-3 h-full flex flex-col">
+              <div className="bg-white border-2 border-blue-500 rounded-lg p-4 flex flex-col h-full">
                 <textarea
                   value={bioText}
                   onChange={(e) => setBioText(e.target.value)}
-                  className="w-full flex-1 text-sm text-gray-900 bg-transparent border-none outline-none placeholder-gray-400 resize-none"
+                  className="w-full text-sm text-gray-900 bg-transparent border-none outline-none placeholder-gray-400 resize-none flex-1 min-h-0"
                   placeholder="Tell everyone about your anime journey, favorite genres, or what you're currently watching..."
                   maxLength={500}
                   autoFocus
                   disabled={bioLoading}
                 />
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200 flex-shrink-0">
                   <span className="text-xs text-gray-400">{bioText.length}/500</span>
                   <div className="flex space-x-2">
                     <button
                       onClick={handleBioCancel}
-                      className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded"
+                      className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-md transition-colors"
                       disabled={bioLoading}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleBioUpdate}
-                      className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
+                      className="text-xs text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-md bg-blue-50 hover:bg-blue-100 disabled:opacity-50 transition-colors"
                       disabled={bioLoading}
                     >
                       {bioLoading ? 'Saving...' : 'Save'}
@@ -281,7 +278,10 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
                     ? 'bg-gray-50 hover:bg-gray-100' 
                     : 'bg-gray-50 border-2 border-dashed border-gray-300 hover:border-gray-400'
                 }`}
-                onClick={() => setIsEditingBio(true)}
+                onClick={() => {
+                  setBioText(profile?.bio || '')
+                  setIsEditingBio(true)
+                }}
               >
                 <div className={`text-sm leading-relaxed whitespace-pre-line ${
                   profile?.bio && profile.bio.trim() !== '' 

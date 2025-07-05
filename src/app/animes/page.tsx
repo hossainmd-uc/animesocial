@@ -315,11 +315,11 @@ export default function AnimesPage() {
                       {/* Add to Favorites Button */}
                       <button
                         onClick={() => toggleFavorite(anime.id)}
-                        className={`p-2 rounded-full ${
+                        className={`p-2 rounded-lg ${
                           isFavorite(anime.id)
                             ? 'bg-yellow-500 text-white'
-                            : 'bg-white/80 hover:bg-white text-gray-700'
-                        } shadow-sm transition-colors`}
+                            : 'bg-white/90 hover:bg-white text-gray-700'
+                        } shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 backdrop-blur-sm cursor-pointer`}
                         title={isFavorite(anime.id) ? 'Remove from favorites' : 'Add to favorites'}
                       >
                         ⭐
@@ -329,11 +329,11 @@ export default function AnimesPage() {
                       <button
                         onClick={() => addToWatchlist(anime.id)}
                         disabled={isInWatchlist(anime.id)}
-                        className={`p-2 rounded-full ${
+                        className={`p-2 rounded-lg ${
                           isInWatchlist(anime.id)
                             ? 'bg-green-500 text-white'
-                            : 'bg-white/80 hover:bg-white text-gray-700'
-                        } shadow-sm transition-colors`}
+                            : 'bg-white/90 hover:bg-white text-gray-700'
+                        } shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 backdrop-blur-sm disabled:transform-none cursor-pointer disabled:cursor-default`}
                         title={isInWatchlist(anime.id) ? 'Already in watchlist' : 'Add to watchlist'}
                       >
                         {isInWatchlist(anime.id) ? '✓' : '+'}

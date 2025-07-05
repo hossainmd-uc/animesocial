@@ -28,7 +28,7 @@ export default function ProfileEditForm({ user, profile, onCancel, onSave }: Pro
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
-      })
+        })
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -79,10 +79,10 @@ export default function ProfileEditForm({ user, profile, onCancel, onSave }: Pro
           {/* Username display (non-editable) */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
-              <div>
+          <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1">
-                  Username
-                </label>
+              Username
+            </label>
                 <p className="text-sm text-gray-600">@{profile?.username || 'username'}</p>
                 <p className="text-xs text-gray-500 mt-1">Your username cannot be changed</p>
               </div>
@@ -99,21 +99,21 @@ export default function ProfileEditForm({ user, profile, onCancel, onSave }: Pro
               Display Name
             </label>
             <div className="relative">
-              <input
-                type="text"
+            <input
+              type="text"
                 id="displayName"
                 name="displayName"
                 value={formData.displayName}
-                onChange={handleChange}
+              onChange={handleChange}
                 className="block w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm font-medium placeholder-gray-500"
                 placeholder="How you want others to see you"
-              />
+            />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-              </div>
-            </div>
+          </div>
+          </div>
           </div>
 
 

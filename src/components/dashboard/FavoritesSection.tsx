@@ -45,6 +45,28 @@ export default function FavoritesSection() {
       if (response.ok) {
         const data = await response.json();
         const favoriteAnimes = data.filter((item: UserAnime) => item.isFavorite);
+        
+        // Sort by status priority: Watching → Completed → Dropped → Plan to Watch
+        const statusPriority = {
+          'watching': 1,
+          'completed': 2,
+          'dropped': 3,
+          'plan_to_watch': 4
+        };
+
+        favoriteAnimes.sort((a: UserAnime, b: UserAnime) => {
+          const priorityA = statusPriority[a.status as keyof typeof statusPriority] || 5;
+          const priorityB = statusPriority[b.status as keyof typeof statusPriority] || 5;
+          
+          // First sort by status priority
+          if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+          }
+          
+          // If same status, sort alphabetically by title
+          return a.anime.title.localeCompare(b.anime.title);
+        });
+        
         setFavorites(favoriteAnimes);
       }
     } catch (error) {
@@ -52,7 +74,23 @@ export default function FavoritesSection() {
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      'watching': { label: 'Watching', bgColor: 'bg-blue-100', textColor: 'text-blue-700' },
+      'completed': { label: 'Completed', bgColor: 'bg-green-100', textColor: 'text-green-700' },
+      'dropped': { label: 'Dropped', bgColor: 'bg-red-100', textColor: 'text-red-700' },
+      'plan_to_watch': { label: 'Plan to Watch', bgColor: 'bg-gray-100', textColor: 'text-gray-700' },
+    };
+    
+    return statusConfig[status as keyof typeof statusConfig] || statusConfig['plan_to_watch'];
+  };
 
+  const getProgressBarColor = (status: string) => {
+    if (status === 'completed') return 'bg-green-500';
+    if (status === 'watching') return 'bg-blue-500';
+    if (status === 'dropped') return 'bg-red-500';
+    return 'bg-gray-400';
+  };
 
   if (loading) {
     return (
@@ -127,10 +165,16 @@ export default function FavoritesSection() {
               
               {/* Anime Info */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-gray-900 text-sm truncate">
-                  {item.anime.title}
-                </h3>
-                <div className="flex items-center text-xs text-gray-500 mt-1">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="font-medium text-gray-900 text-sm truncate">
+                    {item.anime.title}
+                  </h3>
+                  {/* Status Badge */}
+                  <span className={`${getStatusBadge(item.status).bgColor} ${getStatusBadge(item.status).textColor} text-xs font-medium px-2 py-0.5 rounded ml-2 flex-shrink-0`}>
+                    {getStatusBadge(item.status).label}
+                  </span>
+                </div>
+                <div className="flex items-center text-xs text-gray-500">
                   {item.anime.year && (
                     <span className="mr-2">{item.anime.year}</span>
                   )}
@@ -142,7 +186,7 @@ export default function FavoritesSection() {
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
                       <div 
-                        className="bg-blue-500 h-1.5 rounded-full transition-all"
+                        className={`${getProgressBarColor(item.status)} h-1.5 rounded-full transition-all`}
                         style={{ 
                           width: `${Math.min((item.progress / (item.anime.episodes || 12)) * 100, 100)}%` 
                         }}
@@ -154,8 +198,6 @@ export default function FavoritesSection() {
                   </div>
                 )}
               </div>
-              
-
             </div>
           ))}
           

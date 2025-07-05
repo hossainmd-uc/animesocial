@@ -57,14 +57,15 @@ export default function Header() {
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+        <div className="flex justify-between items-center h-20 py-4">
           {/* Left side - Logo */}
-          <Link href="/dashboard" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center">
-              <span className="text-white text-sm">📺</span>
-            </div>
-            <span className="font-bold text-gray-900">AnimeSocial</span>
+          <Link href="/dashboard" className="flex items-center">
+            <img 
+              src="/Logo.png" 
+              alt="AnimeSocial Logo" 
+              className="w-32 h-32 object-contain"
+            />
           </Link>
 
           {/* Center - Navigation */}

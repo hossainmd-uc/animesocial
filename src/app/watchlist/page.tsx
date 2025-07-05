@@ -26,7 +26,6 @@ const statusOptions = [
   { value: 'all', label: 'All Status' },
   { value: 'watching', label: 'Watching' },
   { value: 'completed', label: 'Completed' },
-  { value: 'on_hold', label: 'On Hold' },
   { value: 'dropped', label: 'Dropped' },
   { value: 'plan_to_watch', label: 'Plan to Watch' },
 ];
@@ -119,6 +118,26 @@ export default function WatchlistPage() {
     }
   };
 
+  const handleRemoveAnime = async (animeId: string) => {
+    if (!confirm('Are you sure you want to remove this anime from your watchlist?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/user/anime-list', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: animeId }),
+      });
+
+      if (response.ok) {
+        await fetchUserLists();
+      }
+    } catch (error) {
+      console.error('Error removing anime:', error);
+    }
+  };
+
   // Filter data based on active tab
   const getFilteredData = () => {
     const baseData = activeTab === 'favorites' 
@@ -138,6 +157,27 @@ export default function WatchlistPage() {
         item.anime.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
+
+    // Sort by status priority: Watching → Completed → Dropped → Plan to Watch
+    const statusPriority = {
+      'watching': 1,
+      'completed': 2,
+      'dropped': 3,
+      'plan_to_watch': 4
+    };
+
+    filtered.sort((a, b) => {
+      const priorityA = statusPriority[a.status as keyof typeof statusPriority] || 5;
+      const priorityB = statusPriority[b.status as keyof typeof statusPriority] || 5;
+      
+      // First sort by status priority
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      
+      // If same status, sort alphabetically by title
+      return a.anime.title.localeCompare(b.anime.title);
+    });
 
     return filtered;
   };
@@ -262,6 +302,7 @@ export default function WatchlistPage() {
                 onStatusChange={(newStatus) => handleStatusChange(item.id, newStatus)}
                 onProgressChange={(newProgress) => handleProgressChange(item.id, newProgress)}
                 onFavoriteToggle={() => handleFavoriteToggle(item.id, item.isFavorite)}
+                onRemove={() => handleRemoveAnime(item.id)}
               />
             ))}
           </div>

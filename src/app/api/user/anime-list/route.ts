@@ -145,11 +145,56 @@ export async function PATCH(request: Request) {
   try {
     const { id, status, progress, isFavorite } = await request.json();
 
+    // Get the current anime data to access episode count
+    const currentEntry = await prisma.userAnimeList.findUnique({
+      where: {
+        id,
+        profileId: user.id,
+      },
+      include: {
+        anime: {
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true,
+            episodes: true,
+          },
+        },
+      },
+    });
+
+    if (!currentEntry) {
+      return NextResponse.json({ error: 'Anime entry not found' }, { status: 404 });
+    }
+
     // Build update data object with only provided fields
     const updateData: any = {};
     if (status !== undefined) updateData.status = status;
     if (progress !== undefined) updateData.progress = progress;
     if (isFavorite !== undefined) updateData.isFavorite = isFavorite;
+
+    // Auto-adjust progress based on status changes
+    if (status !== undefined && progress === undefined) {
+      if (status === 'completed' && currentEntry.anime.episodes) {
+        // When marking as completed, set progress to total episodes
+        updateData.progress = currentEntry.anime.episodes;
+      } else if (status === 'plan_to_watch') {
+        // When marking as plan to watch, reset progress to 0
+        updateData.progress = 0;
+      }
+      // For other statuses (watching, dropped), keep current progress
+    }
+
+    // Auto-adjust status based on progress changes
+    if (progress !== undefined && status === undefined) {
+      if (currentEntry.status === 'completed' && progress < (currentEntry.anime.episodes || 0)) {
+        // If currently completed but progress is set below total episodes, change to watching
+        updateData.status = 'watching';
+      } else if (progress === (currentEntry.anime.episodes || 0) && currentEntry.status === 'watching') {
+        // If progress equals total episodes and currently watching, mark as completed
+        updateData.status = 'completed';
+      }
+    }
 
     const userAnime = await prisma.userAnimeList.update({
       where: {

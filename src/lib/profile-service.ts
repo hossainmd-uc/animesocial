@@ -47,30 +47,29 @@ export class ProfileService {
     displayName?: string
     bio?: string
     favoriteAnime?: string
-    avatarUrl?: string
+    avatarUrl?: string | null
     status?: string
   }) {
     console.log('ProfileService.upsertProfile: Input data:', data);
     
     try {
+      // Convert undefined to null for proper database updates
+      const cleanData = {
+        displayName: data.displayName ?? null,
+        bio: data.bio ?? null,
+        favoriteAnime: data.favoriteAnime ?? null,
+        avatarUrl: data.avatarUrl ?? null,
+        status: data.status ?? null,
+      }
+      
       const result = await prisma.profile.upsert({
-        where: { id: data.id },
-        create: {
-          id: data.id,
+      where: { id: data.id },
+      create: {
+        id: data.id,
           username: data.username || 'user_' + data.id.slice(0, 8),
-          displayName: data.displayName,
-          bio: data.bio,
-          favoriteAnime: data.favoriteAnime,
-          avatarUrl: data.avatarUrl,
-          status: data.status,
-        },
-        update: {
-          displayName: data.displayName,
-          bio: data.bio,
-          favoriteAnime: data.favoriteAnime,
-          avatarUrl: data.avatarUrl,
-          status: data.status,
-        }
+          ...cleanData,
+      },
+      update: cleanData
       });
       
       console.log('ProfileService.upsertProfile: Success result:', result);
