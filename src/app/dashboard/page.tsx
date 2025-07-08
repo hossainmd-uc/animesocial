@@ -25,13 +25,13 @@ export default async function DashboardPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen smooth-gradient transition-all duration-500">
       {/* Header */}
       <Header />
       
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="content-wrapper section-padding py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Section */}
           <div className="lg:col-span-1">
             <ProfileCard user={user} profile={profile} />
@@ -40,7 +40,7 @@ export default async function DashboardPage() {
           {/* Favorites Section */}
           <div className="lg:col-span-1">
             <FavoritesSection />
-            </div>
+          </div>
             
           {/* Recent Activity Section */}
           <div className="lg:col-span-1">

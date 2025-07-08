@@ -15,12 +15,12 @@ export default function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-colors flex items-center space-x-2"
+      className="group relative bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium py-2.5 px-4 rounded-lg text-sm transition-all duration-300 btn-animate"
     >
-      <span>Log Out</span>
-      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
-      </svg>
+      <span>Sign Out</span>
+      
+      {/* Subtle hover effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-gray-300/20 to-gray-400/20 dark:from-gray-600/20 dark:to-gray-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </button>
   )
 } 

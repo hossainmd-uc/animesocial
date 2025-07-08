@@ -138,29 +138,29 @@ export default function SignUpForm() {
       )}
       
       <div className="rounded-md shadow-sm -space-y-px">
-        <div>
+        <div className="group">
           <input
             id="email-address"
             name="email"
             type="email"
             autoComplete="email"
             required
-            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 hover:border-purple-400 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-0 focus:border-purple-500 focus:z-10 sm:text-sm transition-all duration-300"
             placeholder="Email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <div className="relative">
+        <div className="relative group">
           <input
             id="username"
             name="username"
             type="text"
             autoComplete="username"
             required
-            className={`appearance-none rounded-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm ${
-              usernameAvailable === true ? 'border-green-500' : 
-              usernameAvailable === false ? 'border-red-500' : ''
+            className={`appearance-none rounded-none relative block w-full px-3 py-2 pr-10 border border-gray-300 hover:border-purple-400 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-0 focus:border-purple-500 focus:z-10 sm:text-sm transition-all duration-300 ${
+              usernameAvailable === true ? 'border-green-500 hover:border-green-600 focus:border-green-500' : 
+              usernameAvailable === false ? 'border-red-500 hover:border-red-600 focus:border-red-500' : ''
             }`}
             placeholder="Username (3-20 characters)"
             value={username}
@@ -185,39 +185,39 @@ export default function SignUpForm() {
             {usernameError}
           </div>
         )}
-        <div>
+        <div className="group">
           <input
             id="display-name"
             name="display-name"
             type="text"
             autoComplete="name"
-            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 hover:border-purple-400 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-0 focus:border-purple-500 focus:z-10 sm:text-sm transition-all duration-300"
             placeholder="Display name (optional)"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
           />
         </div>
-        <div>
+        <div className="group">
           <input
             id="password"
             name="password"
             type="password"
             autoComplete="new-password"
             required
-            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 hover:border-purple-400 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-0 focus:border-purple-500 focus:z-10 sm:text-sm transition-all duration-300"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        <div>
+        <div className="group">
           <input
             id="confirm-password"
             name="confirm-password"
             type="password"
             autoComplete="new-password"
             required
-            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 hover:border-purple-400 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-0 focus:border-purple-500 focus:z-10 sm:text-sm transition-all duration-300"
             placeholder="Confirm Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}

@@ -52,27 +52,27 @@ export default function LoginForm() {
       )}
       
       <div className="rounded-md shadow-sm -space-y-px">
-        <div>
+        <div className="group">
           <input
             id="email-address"
             name="email"
             type="email"
             autoComplete="email"
             required
-            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 hover:border-purple-400 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-0 focus:border-purple-500 focus:z-10 sm:text-sm transition-all duration-300"
             placeholder="Email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <div>
+        <div className="group">
           <input
             id="password"
             name="password"
             type="password"
             autoComplete="current-password"
             required
-            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 hover:border-purple-400 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-0 focus:border-purple-500 focus:z-10 sm:text-sm transition-all duration-300"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

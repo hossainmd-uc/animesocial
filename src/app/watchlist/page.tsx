@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/src/lib/supabase/client';
 import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import Header from '@/src/components/layout/Header';
-import AnimeCard from '@/src/components/AnimeCard';
+import EnhancedAnimeCard from '@/src/components/EnhancedAnimeCard';
 
 interface Anime {
   id: string;
@@ -188,11 +188,14 @@ export default function WatchlistPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen smooth-gradient transition-all duration-500">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="content-wrapper section-padding py-8">
           <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="flex flex-col items-center space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading your collection...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -201,15 +204,15 @@ export default function WatchlistPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen smooth-gradient transition-all duration-500">
         <Header />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🔒</span>
+        <div className="content-wrapper section-padding py-8">
+          <div className="text-center py-20">
+            <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-3xl">🔒</span>
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Authentication Required</h2>
-            <p className="text-gray-600">Please sign in to view your watchlist and favorites.</p>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">Authentication Required</h2>
+            <p className="text-gray-600 dark:text-gray-400">Please sign in to view your watchlist and favorites.</p>
           </div>
         </div>
       </div>
@@ -217,60 +220,78 @@ export default function WatchlistPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen smooth-gradient transition-all duration-500">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="content-wrapper section-padding py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Anime Collection</h1>
-          <p className="text-gray-600">Manage your watchlist and favorite anime</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">My Collection</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">Manage your anime watchlist and discover your favorites</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 bg-gray-200 p-1 rounded-lg mb-6 w-fit">
+        <div className="flex space-x-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg p-1.5 rounded-2xl mb-8 w-fit border border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setActiveTab('watchlist')}
-            className={`px-4 py-2 rounded-md font-medium transition-all ${
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'watchlist'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105'
             }`}
           >
-            Watchlist ({watchlistCount})
+            <div className="flex items-center space-x-2">
+              <span>Watchlist</span>
+              <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
+                activeTab === 'watchlist' 
+                  ? 'bg-white/20 text-white' 
+                  : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+              }`}>
+                {watchlistCount}
+              </span>
+            </div>
           </button>
           <button
             onClick={() => setActiveTab('favorites')}
-            className={`px-4 py-2 rounded-md font-medium transition-all ${
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'favorites'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105'
             }`}
           >
-            Favorites ({favoritesCount})
+            <div className="flex items-center space-x-2">
+              <span>Favorites</span>
+              <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
+                activeTab === 'favorites' 
+                  ? 'bg-white/20 text-white' 
+                  : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+              }`}>
+                {favoritesCount}
+              </span>
+            </div>
           </button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
           {/* Search */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 group">
             <input
               type="text"
               placeholder={`Search ${activeTab}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500 focus:outline-none focus:ring-0 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-purple-500 transition-colors duration-300" />
           </div>
 
           {/* Status Filter */}
-          <div className="relative">
+          <div className="relative group">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="appearance-none bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl px-4 py-4 pr-10 focus:outline-none focus:ring-0 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-gray-100 transition-all duration-300 min-w-[180px]"
             >
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -278,22 +299,22 @@ export default function WatchlistPage() {
                 </option>
               ))}
             </select>
-            <FunnelIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+            <FunnelIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 transition-colors duration-300 pointer-events-none" />
           </div>
         </div>
 
         {/* Results Info */}
-        <div className="mb-4">
-          <p className="text-sm text-gray-600">
-            Showing {filteredData.length} anime in {activeTab}
+        <div className="mb-6">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Showing <span className="font-semibold text-gray-900 dark:text-gray-100">{filteredData.length}</span> anime in {activeTab}
           </p>
         </div>
 
         {/* Anime Grid */}
         {filteredData.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             {filteredData.map((item) => (
-              <AnimeCard
+              <EnhancedAnimeCard
                 key={item.id}
                 anime={item.anime}
                 status={item.status}
@@ -303,21 +324,22 @@ export default function WatchlistPage() {
                 onProgressChange={(newProgress) => handleProgressChange(item.id, newProgress)}
                 onFavoriteToggle={() => handleFavoriteToggle(item.id, item.isFavorite)}
                 onRemove={() => handleRemoveAnime(item.id)}
+                variant="watchlist"
               />
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">{activeTab === 'favorites' ? '⭐' : '📺'}</span>
+          <div className="text-center py-20">
+            <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-3xl">{activeTab === 'favorites' ? '⭐' : '📺'}</span>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
               No {activeTab} found
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
               {searchQuery || statusFilter !== 'all'
-                ? 'Try adjusting your search or filters'
-                : `Start adding anime to your ${activeTab}!`}
+                ? 'Try adjusting your search or filters to find what you\'re looking for.'
+                : `Start adding anime to your ${activeTab} to build your collection!`}
             </p>
           </div>
         )}
