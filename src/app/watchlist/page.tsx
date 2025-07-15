@@ -6,6 +6,7 @@ import { createClient } from '@/src/lib/supabase/client';
 import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import Header from '@/src/components/layout/Header';
 import EnhancedAnimeCard from '@/src/components/EnhancedAnimeCard';
+import { useDarkMode } from '@/src/hooks/useDarkMode';
 
 interface Anime {
   id: string;
@@ -38,6 +39,7 @@ export default function WatchlistPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [userAnimeList, setUserAnimeList] = useState<UserAnime[]>([]);
   const [activeTab, setActiveTab] = useState<'watchlist' | 'favorites'>('watchlist');
+  const { isDarkMode, mounted } = useDarkMode();
 
   useEffect(() => {
     const getUser = async () => {
@@ -186,7 +188,7 @@ export default function WatchlistPage() {
   const watchlistCount = userAnimeList.length; // Total count of all anime in watchlist
   const favoritesCount = userAnimeList.filter(item => item.isFavorite).length;
 
-  if (loading) {
+  if (loading || !mounted) {
     return (
       <div className="min-h-screen smooth-gradient transition-all duration-500">
         <Header />
@@ -194,7 +196,7 @@ export default function WatchlistPage() {
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="flex flex-col items-center space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading your collection...</p>
+              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Loading your collection...</p>
             </div>
           </div>
         </div>
@@ -208,11 +210,17 @@ export default function WatchlistPage() {
         <Header />
         <div className="content-wrapper section-padding py-8">
           <div className="text-center py-20">
-            <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
+              isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+            }`}>
               <span className="text-3xl">🔒</span>
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">Authentication Required</h2>
-            <p className="text-gray-600 dark:text-gray-400">Please sign in to view your watchlist and favorites.</p>
+            <h2 className={`text-2xl font-bold mb-3 ${
+              isDarkMode ? 'text-gray-200' : 'text-gray-800'
+            }`}>Authentication Required</h2>
+            <p className={`${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>Please sign in to view your watchlist and favorites.</p>
           </div>
         </div>
       </div>
@@ -226,18 +234,28 @@ export default function WatchlistPage() {
       <div className="content-wrapper section-padding py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">My Collection</h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">Manage your anime watchlist and discover your favorites</p>
+          <h1 className={`text-4xl font-bold mb-3 ${
+            isDarkMode ? 'text-gray-100' : 'text-gray-900'
+          }`}>My Collection</h1>
+          <p className={`text-lg ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>Manage your anime watchlist and discover your favorites</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg p-1.5 rounded-2xl mb-8 w-fit border border-gray-200 dark:border-gray-700">
+        <div className={`flex space-x-1 backdrop-blur-lg p-1.5 rounded-2xl mb-8 w-fit border ${
+          isDarkMode 
+            ? 'bg-gray-800/80 border-gray-700' 
+            : 'bg-white/80 border-gray-200'
+        }`}>
           <button
             onClick={() => setActiveTab('watchlist')}
             className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'watchlist'
                 ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105'
+                : isDarkMode
+                  ? 'text-gray-400 hover:text-gray-100 hover:bg-gray-700 hover:scale-105'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 hover:scale-105'
             }`}
           >
             <div className="flex items-center space-x-2">
@@ -245,7 +263,9 @@ export default function WatchlistPage() {
               <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
                 activeTab === 'watchlist' 
                   ? 'bg-white/20 text-white' 
-                  : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                  : isDarkMode
+                    ? 'bg-gray-600 text-gray-300'
+                    : 'bg-gray-200 text-gray-600'
               }`}>
                 {watchlistCount}
               </span>
@@ -256,7 +276,9 @@ export default function WatchlistPage() {
             className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'favorites'
                 ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105'
+                : isDarkMode
+                  ? 'text-gray-400 hover:text-gray-100 hover:bg-gray-700 hover:scale-105'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 hover:scale-105'
             }`}
           >
             <div className="flex items-center space-x-2">
@@ -264,7 +286,9 @@ export default function WatchlistPage() {
               <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
                 activeTab === 'favorites' 
                   ? 'bg-white/20 text-white' 
-                  : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                  : isDarkMode
+                    ? 'bg-gray-600 text-gray-300'
+                    : 'bg-gray-200 text-gray-600'
               }`}>
                 {favoritesCount}
               </span>
@@ -281,9 +305,15 @@ export default function WatchlistPage() {
               placeholder={`Search ${activeTab}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500 focus:outline-none focus:ring-0 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              className={`w-full pl-12 pr-4 py-4 rounded-xl backdrop-blur-lg border hover:border-purple-400 focus:outline-none focus:ring-0 focus:border-purple-500 transition-all duration-300 ${
+                isDarkMode
+                  ? 'bg-gray-800/80 border-gray-700 hover:border-purple-500 focus:border-purple-400 text-gray-100 placeholder-gray-400'
+                  : 'bg-white/80 border-gray-200 hover:border-purple-400 focus:border-purple-500 text-gray-900 placeholder-gray-500'
+              }`}
             />
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-purple-500 transition-colors duration-300" />
+            <MagnifyingGlassIcon className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 group-hover:text-purple-500 transition-colors duration-300 ${
+              isDarkMode ? 'text-gray-500' : 'text-gray-400'
+            }`} />
           </div>
 
           {/* Status Filter */}
@@ -291,7 +321,11 @@ export default function WatchlistPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl px-4 py-4 pr-10 focus:outline-none focus:ring-0 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-gray-100 transition-all duration-300 min-w-[180px]"
+              className={`appearance-none backdrop-blur-lg border hover:border-blue-400 rounded-xl px-4 py-4 pr-10 focus:outline-none focus:ring-0 focus:border-blue-500 transition-all duration-300 min-w-[180px] ${
+                isDarkMode
+                  ? 'bg-gray-800/80 border-gray-700 hover:border-blue-500 focus:border-blue-400 text-gray-100'
+                  : 'bg-white/80 border-gray-200 hover:border-blue-400 focus:border-blue-500 text-gray-900'
+              }`}
             >
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -299,14 +333,18 @@ export default function WatchlistPage() {
                 </option>
               ))}
             </select>
-            <FunnelIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 transition-colors duration-300 pointer-events-none" />
+            <FunnelIcon className={`absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 group-hover:text-blue-500 transition-colors duration-300 pointer-events-none ${
+              isDarkMode ? 'text-gray-500' : 'text-gray-400'
+            }`} />
           </div>
         </div>
 
         {/* Results Info */}
         <div className="mb-6">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Showing <span className="font-semibold text-gray-900 dark:text-gray-100">{filteredData.length}</span> anime in {activeTab}
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Showing <span className={`font-semibold ${
+              isDarkMode ? 'text-gray-100' : 'text-gray-900'
+            }`}>{filteredData.length}</span> anime in {activeTab}
           </p>
         </div>
 
@@ -330,13 +368,19 @@ export default function WatchlistPage() {
           </div>
         ) : (
           <div className="text-center py-20">
-            <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
+              isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+            }`}>
               <span className="text-3xl">{activeTab === 'favorites' ? '⭐' : '📺'}</span>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            <h3 className={`text-xl font-semibold mb-3 ${
+              isDarkMode ? 'text-gray-100' : 'text-gray-900'
+            }`}>
               No {activeTab} found
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+            <p className={`max-w-md mx-auto ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
               {searchQuery || statusFilter !== 'all'
                 ? 'Try adjusting your search or filters to find what you\'re looking for.'
                 : `Start adding anime to your ${activeTab} to build your collection!`}

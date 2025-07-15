@@ -8,16 +8,23 @@ datasource db {
 }
 
 model Profile {
-  id            String          @id @db.Uuid
-  username      String          @unique
-  displayName   String?         @map("display_name")
+  id            String            @id @db.Uuid
+  username      String            @unique
+  displayName   String?           @map("display_name")
   bio           String?
-  favoriteAnime String?         @map("favorite_anime")
-  avatarUrl     String?         @map("avatar_url")
+  favoriteAnime String?           @map("favorite_anime")
+  avatarUrl     String?           @map("avatar_url")
   status        String?
-  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   animeList     UserAnimeList[]
+  
+  // Server relationships
+  ownedServers  Server[]          @relation("ServerOwner")
+  serverMembers ServerMember[]    @relation("ServerMembership")
+  serverPosts   ServerPost[]      @relation("ServerPostAuthor")
+  serverMessages ServerMessage[]  @relation("ServerMessageAuthor")
+  postLikes     ServerPostLike[]  @relation("ServerPostLikes")
 
   @@index([username])
   @@index([createdAt])
@@ -61,6 +68,7 @@ model Anime {
   studios           AnimeStudios[]
   themes            AnimeThemes[]
   userList          UserAnimeList[]
+  serverPosts       ServerPost[]     @relation("ServerPostAnime")
 
   @@map("animes")
 }
@@ -207,4 +215,131 @@ model UserAnimeList {
   @@index([profileId])
   @@index([animeId])
   @@map("user_anime_list")
+}
+
+// Server Models
+model Server {
+  id          String          @id @default(cuid())
+  name        String
+  description String?
+  iconUrl     String?         @map("icon_url")
+  inviteCode  String          @unique @map("invite_code")
+  isPublic    Boolean         @default(true) @map("is_public")
+  ownerId     String          @map("owner_id") @db.Uuid
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @default(now()) @updatedAt @map("updated_at")
+  
+  owner       Profile         @relation("ServerOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     ServerMember[]
+  channels    ServerChannel[]
+  posts       ServerPost[]
+
+  @@index([ownerId])
+  @@index([inviteCode])
+  @@index([isPublic])
+  @@map("servers")
+}
+
+model ServerMember {
+  id        String   @id @default(cuid())
+  serverId  String   @map("server_id")
+  profileId String   @map("profile_id") @db.Uuid
+  role      String   @default("member")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  profile   Profile  @relation("ServerMembership", fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, profileId])
+  @@index([serverId])
+  @@index([profileId])
+  @@map("server_members")
+}
+
+model ServerChannel {
+  id          String           @id @default(cuid())
+  serverId    String           @map("server_id")
+  name        String
+  description String?
+  type        String           @default("text")
+  position    Int              @default(0)
+  isPrivate   Boolean          @default(false) @map("is_private")
+  parentId    String?          @map("parent_id")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @default(now()) @updatedAt @map("updated_at")
+  
+  server      Server           @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  parent      ServerChannel?   @relation("ChannelParent", fields: [parentId], references: [id])
+  children    ServerChannel[]  @relation("ChannelParent")
+  posts       ServerPost[]
+  messages    ServerMessage[]
+
+  @@index([serverId])
+  @@index([parentId])
+  @@index([type])
+  @@map("server_channels")
+}
+
+model ServerPost {
+  id        String            @id @default(cuid())
+  serverId  String            @map("server_id")
+  channelId String?           @map("channel_id")
+  authorId  String            @map("author_id") @db.Uuid
+  content   String
+  title     String?  @map("title")
+  imageUrl  String?           @map("image_url")
+  animeId   String?           @map("anime_id")
+  parentId  String?           @map("parent_id")
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @default(now()) @updatedAt @map("updated_at")
+  
+  server    Server            @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  channel   ServerChannel?    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author    Profile           @relation("ServerPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  anime     Anime?            @relation("ServerPostAnime", fields: [animeId], references: [id], onDelete: SetNull)
+  parent    ServerPost?       @relation("PostReply", fields: [parentId], references: [id])
+  replies   ServerPost[]      @relation("PostReply")
+  likes     ServerPostLike[]
+
+  @@index([serverId])
+  @@index([channelId])
+  @@index([authorId])
+  @@index([animeId])
+  @@index([parentId])
+  @@index([createdAt])
+  @@map("server_posts")
+}
+
+model ServerMessage {
+  id        String         @id @default(cuid())
+  channelId String         @map("channel_id")
+  authorId  String         @map("author_id") @db.Uuid
+  content   String
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at")
+  
+  channel   ServerChannel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author    Profile        @relation("ServerMessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("server_messages")
+}
+
+model ServerPostLike {
+  id        String     @id @default(cuid())
+  postId    String     @map("post_id")
+  profileId String     @map("profile_id") @db.Uuid
+  createdAt DateTime   @default(now()) @map("created_at")
+  
+  post      ServerPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  profile   Profile    @relation("ServerPostLikes", fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, profileId])
+  @@index([postId])
+  @@index([profileId])
+  @@map("server_post_likes")
 }

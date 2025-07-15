@@ -1,45 +1,34 @@
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { HeartIcon as HeartOutline, PlusIcon, XMarkIcon, BookmarkIcon as BookmarkOutline } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartSolid, PencilIcon, BookmarkIcon as BookmarkSolid } from '@heroicons/react/24/solid';
-import { StarIcon } from '@heroicons/react/24/solid';
-import ProgressEditModal from './ProgressEditModal';
-import AnimeDetailsModal from './AnimeDetailsModal';
+'use client'
 
-interface Anime {
-  id: string;
-  title: string;
-  imageUrl: string;
-  episodes: number;
-  score?: number;
-  year?: number;
-  synopsis?: string;
-  genres?: string[];
-  status?: string;
-  type?: string;
-  duration?: string;
+import { useState } from 'react'
+import { HeartIcon as HeartSolid, PlusIcon, XMarkIcon } from '@heroicons/react/24/solid'
+import { HeartIcon as HeartOutline, EyeIcon } from '@heroicons/react/24/outline'
+import AnimeDetailsModal from './AnimeDetailsModal'
+import { useDarkMode } from '@/src/hooks/useDarkMode'
+
+export interface Anime {
+  id: string
+  title: string
+  imageUrl: string
+  episodes?: number
+  score?: number
+  year?: number
+  synopsis?: string
 }
 
-interface EnhancedAnimeCardProps {
-  anime: Anime;
-  status?: string;
-  progress?: number;
-  isFavorite?: boolean;
-  isInWatchlist?: boolean;
-  onStatusChange?: (newStatus: string) => Promise<void>;
-  onProgressChange?: (newProgress: number) => Promise<void>;
-  onFavoriteToggle?: () => Promise<void>;
-  onWatchlistToggle?: () => Promise<void>;
-  onRemove?: () => Promise<void>;
-  variant?: 'watchlist' | 'browse';
+export interface EnhancedAnimeCardProps {
+  anime: Anime
+  status?: string
+  progress?: number
+  isFavorite?: boolean
+  isInWatchlist?: boolean
+  onStatusChange?: (status: string) => void
+  onProgressChange?: (progress: number) => void
+  onFavoriteToggle?: () => void
+  onWatchlistToggle?: () => void
+  onRemove?: () => void
+  variant?: 'browse' | 'watchlist'
 }
-
-const statusOptions = [
-  { value: 'watching', label: 'Watching', color: 'text-blue-500' },
-  { value: 'completed', label: 'Completed', color: 'text-green-500' },
-  { value: 'dropped', label: 'Dropped', color: 'text-red-500' },
-  { value: 'plan_to_watch', label: 'Plan to Watch', color: 'text-gray-500' },
-];
 
 export default function EnhancedAnimeCard({
   anime,
@@ -54,83 +43,75 @@ export default function EnhancedAnimeCard({
   onRemove,
   variant = 'browse',
 }: EnhancedAnimeCardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [isHovered, setIsHovered] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [statusValue, setStatusValue] = useState(status || 'Plan to Watch')
+  const [progressValue, setProgressValue] = useState(progress)
+  const { isDarkMode, mounted } = useDarkMode()
 
-  const progressPercentage = anime.episodes ? (progress / anime.episodes) * 100 : 0;
+  const handleStatusSubmit = () => {
+    onStatusChange?.(statusValue)
+  }
 
-  const getProgressBarColor = () => {
-    if (status === 'completed') return 'bg-gradient-to-r from-green-500 to-emerald-600';
-    if (status === 'watching') return 'bg-gradient-to-r from-blue-500 to-cyan-600';
-    if (status === 'dropped') return 'bg-gradient-to-r from-red-500 to-rose-600';
-    return 'bg-gradient-to-r from-gray-400 to-gray-500';
-  };
+  const handleProgressSubmit = () => {
+    onProgressChange?.(progressValue)
+  }
 
-  const handleProgressSave = async (newProgress: number) => {
-    if (onProgressChange) {
-      await onProgressChange(newProgress);
-    }
-  };
+  if (!mounted) {
+    return (
+      <div className="relative bg-white/80 rounded-2xl overflow-hidden shadow-lg border border-gray-200/40 animate-pulse">
+        <div className="aspect-[3/4] bg-gray-200"></div>
+        <div className="p-3 space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
+    )
+  }
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent modal from opening if clicking on action buttons
-    if ((e.target as HTMLElement).closest('button')) {
-      return;
-    }
-    
-    // Show details modal for browse mode
-    if (variant === 'browse' && anime.synopsis) {
-      setShowDetailsModal(true);
-    }
-  };
+  const progressPercentage = anime.episodes ? (progressValue / anime.episodes) * 100 : 0
 
   return (
     <>
       <div 
-        className="group relative bg-white/80 dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 ease-out card-hover border border-gray-200/40 dark:border-slate-700/40 cursor-pointer backdrop-blur-sm"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onClick={handleCardClick}
+        className={`group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 ease-out card-hover border cursor-pointer backdrop-blur-sm ${
+          isDarkMode
+            ? 'bg-slate-800/80 border-slate-700/40'
+            : 'bg-white/80 border-gray-200/40'
+        }`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={() => setShowModal(true)}
       >
-        {/* Main Image Container */}
+        {/* Anime Image */}
         <div className="relative aspect-[3/4] overflow-hidden">
-          <Image
+          <img
             src={anime.imageUrl}
             alt={anime.title}
-            fill
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
           
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           
-          {/* Progress Overlay */}
-          {variant === 'watchlist' && progress > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm">
-              <div className="px-3 py-2">
-                <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden mb-1">
-                  <div 
-                    className={`h-full ${getProgressBarColor()} transition-all duration-500 ease-out shadow-lg`}
-                    style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-                  />
-                </div>
-                <div className="text-white text-xs font-medium text-center">
-                  {progress}/{anime.episodes || '?'} episodes
-                </div>
-              </div>
+          {/* Score Badge */}
+          {anime.score && (
+            <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center space-x-1">
+              <span>⭐</span>
+              <span>{anime.score}</span>
             </div>
           )}
-
+          
+          {/* Progress Bar - Only show if there's progress */}
+          {progressValue > 0 && anime.episodes && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300"
+                style={{ width: `${progressPercentage}%` }}
+              />
+            </div>
+          )}
+          
           {/* Action Buttons Overlay */}
           <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
             isHovered ? 'opacity-100' : 'opacity-0'
@@ -163,109 +144,116 @@ export default function EnhancedAnimeCard({
               {variant === 'browse' && onWatchlistToggle && (
                 <button
                   onClick={onWatchlistToggle}
-                  className="p-3 bg-white/20 backdrop-blur-md rounded-full border border-white/30 hover:bg-white/30 hover:scale-110 transition-all duration-300 group/btn"
+                  className={`p-3 backdrop-blur-md rounded-full border hover:scale-110 transition-all duration-300 group/btn ${
+                    isInWatchlist
+                      ? 'bg-green-500/80 border-green-400/30 hover:bg-green-600/90'
+                      : 'bg-white/20 border-white/30 hover:bg-white/30'
+                  }`}
                 >
                   {isInWatchlist ? (
-                    <BookmarkSolid className="w-5 h-5 text-blue-400 group-hover/btn:scale-110 transition-transform duration-300" />
+                    <EyeIcon className="w-5 h-5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
                   ) : (
-                    <BookmarkOutline className="w-5 h-5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
+                    <PlusIcon className="w-5 h-5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
                   )}
                 </button>
               )}
             </div>
           </div>
+        </div>
 
-          {/* Score Badge */}
-          {anime.score && (
-            <div className="absolute top-3 left-3 glass-effect bg-black/30 backdrop-blur-md px-2 py-1 rounded-lg">
-              <div className="flex items-center space-x-1">
-                <StarIcon className="w-4 h-4 text-yellow-400" />
-                <span className="text-white text-sm font-medium">{anime.score}</span>
+        {/* Content */}
+        <div className="p-3 space-y-2">
+          <h3 className={`font-bold line-clamp-2 text-sm leading-tight group-hover:text-blue-600 transition-colors duration-300 ${
+            isDarkMode 
+              ? 'text-gray-100 group-hover:text-blue-400' 
+              : 'text-gray-900 group-hover:text-blue-600'
+          }`}>
+            {anime.title}
+          </h3>
+          
+          <div className="flex items-center justify-between text-xs">
+            <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {anime.episodes && `${anime.episodes} episodes`}
+              {anime.year && ` • ${anime.year}`}
+            </p>
+          </div>
+
+          {/* Quick Actions for Watchlist Items */}
+          {variant === 'watchlist' && (
+            <div className="space-y-2 pt-2 border-t border-gray-200/50">
+              {/* Status Dropdown */}
+              <select
+                value={statusValue}
+                onChange={(e) => setStatusValue(e.target.value)}
+                onBlur={handleStatusSubmit}
+                className={`w-full p-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-gray-100'
+                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                }`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <option value="Plan to Watch">Plan to Watch</option>
+                <option value="Watching">Watching</option>
+                <option value="Completed">Completed</option>
+                <option value="On Hold">On Hold</option>
+                <option value="Dropped">Dropped</option>
+              </select>
+
+              {/* Progress Input */}
+              <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="number"
+                  min="0"
+                  max={anime.episodes || 999}
+                  value={progressValue}
+                  onChange={(e) => setProgressValue(Number(e.target.value))}
+                  onBlur={handleProgressSubmit}
+                  className={`flex-1 p-1 text-xs border rounded focus:ring-1 focus:ring-blue-500 transition-all duration-300 ${
+                    isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                />
+                <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  / {anime.episodes || '?'}
+                </span>
+                <button
+                  onClick={handleProgressSubmit}
+                  className={`flex items-center space-x-1 px-2 py-1 text-xs rounded-md transition-all duration-300 btn-animate ${
+                    isDarkMode
+                      ? 'text-blue-400 hover:bg-blue-900/30'
+                      : 'text-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  <span>Update</span>
+                </button>
+              </div>
+
+              {/* Progress Bar */}
+              <div className={`w-full rounded-full h-2 overflow-hidden ${
+                isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+              }`}>
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300"
+                  style={{ width: `${progressPercentage}%` }}
+                />
               </div>
             </div>
           )}
         </div>
-
-        {/* Content Section */}
-        <div className="p-4 space-y-3">
-          <div className="space-y-2">
-            <h3 className="font-bold text-gray-900 dark:text-gray-100 line-clamp-2 text-sm leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-              {anime.title}
-            </h3>
-            
-            {anime.year && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {anime.year} • {anime.episodes || '?'} episodes
-              </p>
-            )}
-          </div>
-
-          {/* Watchlist Specific Controls */}
-          {variant === 'watchlist' && onStatusChange && (
-            <div className="space-y-3">
-              {/* Status Select */}
-              <select
-                value={status}
-                onChange={(e) => onStatusChange(e.target.value)}
-                className="w-full p-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-gray-900 dark:text-gray-100"
-              >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-
-              {/* Progress Section */}
-              {status !== 'plan_to_watch' && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
-                      Progress: {Math.round(progressPercentage)}%
-                    </span>
-                    <button
-                      onClick={() => setIsModalOpen(true)}
-                      className="flex items-center space-x-1 px-2 py-1 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-all duration-300 btn-animate"
-                    >
-                      <PencilIcon className="w-3 h-3" />
-                      <span>Edit</span>
-                    </button>
-                  </div>
-                  
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className={`h-full ${getProgressBarColor()} transition-all duration-500 ease-out`}
-                      style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Hover Glow Effect */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       </div>
 
-      {/* Progress Edit Modal */}
-      {variant === 'watchlist' && (
-        <ProgressEditModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+      {/* Modal */}
+      {showModal && (
+        <AnimeDetailsModal
           anime={anime}
-          currentProgress={progress}
-          onSave={handleProgressSave}
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          isFavorite={isFavorite}
+          isInWatchlist={isInWatchlist}
+          onFavoriteToggle={onFavoriteToggle}
+          onWatchlistToggle={onWatchlistToggle}
         />
       )}
-
-      {/* Anime Details Modal */}
-      <AnimeDetailsModal
-        anime={anime}
-        isVisible={showDetailsModal}
-        onClose={() => setShowDetailsModal(false)}
-        mousePosition={{ x: 0, y: 0 }}
-      />
     </>
-  );
+  )
 } 

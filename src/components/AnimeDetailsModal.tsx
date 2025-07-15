@@ -1,12 +1,13 @@
 import React from 'react';
 import Image from 'next/image';
 import { StarIcon, CalendarIcon, PlayIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { useDarkMode } from '@/src/hooks/useDarkMode';
 
 interface Anime {
   id: string;
   title: string;
   imageUrl: string;
-  episodes: number;
+  episodes?: number;
   score?: number;
   year?: number;
   synopsis?: string;
@@ -18,22 +19,26 @@ interface Anime {
 
 interface AnimeDetailsModalProps {
   anime: Anime;
-  isVisible: boolean;
+  isOpen: boolean;
   onClose: () => void;
-  mousePosition: { x: number; y: number };
+  isFavorite?: boolean;
+  isInWatchlist?: boolean;
+  onFavoriteToggle?: () => void;
+  onWatchlistToggle?: () => void;
 }
 
 export default function AnimeDetailsModal({ 
   anime, 
-  isVisible, 
-  onClose,
-  mousePosition 
+  isOpen, 
+  onClose
 }: AnimeDetailsModalProps) {
-  if (!isVisible) return null;
+  const { isDarkMode, mounted } = useDarkMode();
+
+  if (!isOpen || !mounted) return null;
 
   return (
     <div className={`fixed inset-0 z-50 transition-all duration-500 ease-out ${
-      isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
     }`}>
       {/* Softer overlay background */}
       <div 
@@ -43,8 +48,10 @@ export default function AnimeDetailsModal({
       
       {/* Main content container */}
       <div className="relative h-full flex items-center justify-center p-4 md:p-8">
-        <div className={`bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/50 max-w-3xl w-full max-h-full overflow-hidden transform transition-all duration-500 ease-out ${
-          isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-8'
+        <div className={`${
+          isDarkMode ? 'bg-gray-900/95 border-gray-700/50' : 'bg-white/95 border-white/20'
+        } backdrop-blur-xl rounded-3xl shadow-2xl max-w-3xl w-full max-h-full overflow-hidden transform transition-all duration-500 ease-out ${
+          isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-8'
         }`}>
           
           {/* Close button */}
@@ -128,13 +135,23 @@ export default function AnimeDetailsModal({
             </div>
 
             {/* Content sections with glassmorphism */}
-            <div className="p-4 md:p-6 space-y-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+            <div className={`p-4 md:p-6 space-y-6 ${
+              isDarkMode ? 'bg-gray-900/80' : 'bg-white/80'
+            } backdrop-blur-sm`}>
               
               {/* Synopsis section */}
               {anime.synopsis && (
-                <div className="space-y-3 p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/30">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Synopsis</h2>
-                  <p className="text-gray-700 dark:text-gray-200 leading-relaxed text-sm">
+                <div className={`space-y-3 p-4 ${
+                  isDarkMode 
+                    ? 'bg-gray-800/50 border-gray-700/30' 
+                    : 'bg-white/50 border-white/20'
+                } backdrop-blur-sm rounded-xl border`}>
+                  <h2 className={`text-xl font-bold ${
+                    isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                  }`}>Synopsis</h2>
+                  <p className={`${
+                    isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                  } leading-relaxed text-sm`}>
                     {anime.synopsis}
                   </p>
                 </div>
@@ -142,8 +159,14 @@ export default function AnimeDetailsModal({
               
               {/* Genres section */}
               {anime.genres && anime.genres.length > 0 && (
-                <div className="space-y-3 p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/30">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Genres</h2>
+                <div className={`space-y-3 p-4 ${
+                  isDarkMode 
+                    ? 'bg-gray-800/50 border-gray-700/30' 
+                    : 'bg-white/50 border-white/20'
+                } backdrop-blur-sm rounded-xl border`}>
+                  <h2 className={`text-xl font-bold ${
+                    isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                  }`}>Genres</h2>
                   <div className="flex flex-wrap gap-2">
                     {anime.genres.map((genre, index) => (
                       <span
@@ -159,41 +182,75 @@ export default function AnimeDetailsModal({
               
               {/* Additional info grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3 p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/30">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Details</h3>
+                <div className={`space-y-3 p-4 ${
+                  isDarkMode 
+                    ? 'bg-gray-800/50 border-gray-700/30' 
+                    : 'bg-white/50 border-white/20'
+                } backdrop-blur-sm rounded-xl border`}>
+                  <h3 className={`text-lg font-semibold ${
+                    isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                  }`}>Details</h3>
                   <div className="space-y-2">
                     {anime.year && (
-                      <div className="flex justify-between items-center py-1 border-b border-gray-200/50 dark:border-gray-600/50">
-                        <span className="text-gray-600 dark:text-gray-300 text-sm">Year</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">{anime.year}</span>
+                      <div className={`flex justify-between items-center py-1 border-b ${
+                        isDarkMode ? 'border-gray-600/50' : 'border-gray-200/50'
+                      }`}>
+                        <span className={`text-sm ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                        }`}>Year</span>
+                        <span className={`font-medium text-sm ${
+                          isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                        }`}>{anime.year}</span>
                       </div>
                     )}
                     {anime.episodes && (
-                      <div className="flex justify-between items-center py-1 border-b border-gray-200/50 dark:border-gray-600/50">
-                        <span className="text-gray-600 dark:text-gray-300 text-sm">Episodes</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">{anime.episodes}</span>
+                      <div className={`flex justify-between items-center py-1 border-b ${
+                        isDarkMode ? 'border-gray-600/50' : 'border-gray-200/50'
+                      }`}>
+                        <span className={`text-sm ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                        }`}>Episodes</span>
+                        <span className={`font-medium text-sm ${
+                          isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                        }`}>{anime.episodes}</span>
                       </div>
                     )}
                     {anime.type && (
-                      <div className="flex justify-between items-center py-1 border-b border-gray-200/50 dark:border-gray-600/50">
-                        <span className="text-gray-600 dark:text-gray-300 text-sm">Type</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">{anime.type}</span>
+                      <div className={`flex justify-between items-center py-1 border-b ${
+                        isDarkMode ? 'border-gray-600/50' : 'border-gray-200/50'
+                      }`}>
+                        <span className={`text-sm ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                        }`}>Type</span>
+                        <span className={`font-medium text-sm ${
+                          isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                        }`}>{anime.type}</span>
                       </div>
                     )}
                     {anime.status && (
-                      <div className="flex justify-between items-center py-1 border-b border-gray-200/50 dark:border-gray-600/50">
-                        <span className="text-gray-600 dark:text-gray-300 text-sm">Status</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100 text-sm capitalize">
+                      <div className={`flex justify-between items-center py-1 border-b ${
+                        isDarkMode ? 'border-gray-600/50' : 'border-gray-200/50'
+                      }`}>
+                        <span className={`text-sm ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                        }`}>Status</span>
+                        <span className={`font-medium text-sm capitalize ${
+                          isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                        }`}>
                           {anime.status.replace('_', ' ')}
                         </span>
                       </div>
                     )}
                     {anime.score && (
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 dark:text-gray-300 text-sm">Rating</span>
+                        <span className={`text-sm ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                        }`}>Rating</span>
                         <div className="flex items-center gap-1">
                           <StarIcon className="w-4 h-4 text-yellow-500" />
-                          <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">{anime.score}/10</span>
+                          <span className={`font-medium text-sm ${
+                            isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                          }`}>{anime.score}/10</span>
                         </div>
                       </div>
                     )}
@@ -201,8 +258,14 @@ export default function AnimeDetailsModal({
                 </div>
                 
                 {/* Actions section */}
-                <div className="space-y-3 p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-700/30">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Actions</h3>
+                <div className={`space-y-3 p-4 ${
+                  isDarkMode 
+                    ? 'bg-gray-800/50 border-gray-700/30' 
+                    : 'bg-white/50 border-white/20'
+                } backdrop-blur-sm rounded-xl border`}>
+                  <h3 className={`text-lg font-semibold ${
+                    isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                  }`}>Actions</h3>
                   <div className="space-y-2">
                     <button className="w-full px-4 py-2 bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-sm text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl border border-blue-500/30 text-sm">
                       Add to Watchlist

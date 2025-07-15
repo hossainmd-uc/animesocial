@@ -2,25 +2,25 @@
 
 /* CSS Variables for elegant theming */
 :root {
-  --background: 255 255 255;
+  --background: 248 250 252;
   --foreground: 15 23 42;
   --card: 255 255 255;
   --card-foreground: 15 23 42;
   --popover: 255 255 255;
   --popover-foreground: 15 23 42;
-  --primary: 15 23 42;
+  --primary: 59 130 246;
   --primary-foreground: 248 250 252;
   --secondary: 241 245 249;
   --secondary-foreground: 15 23 42;
-  --muted: 241 245 249;
+  --muted: 248 250 252;
   --muted-foreground: 100 116 139;
   --accent: 241 245 249;
   --accent-foreground: 15 23 42;
   --destructive: 239 68 68;
   --destructive-foreground: 248 250 252;
   --border: 226 232 240;
-  --input: 226 232 240;
-  --ring: 15 23 42;
+  --input: 241 245 249;
+  --ring: 59 130 246;
   --radius: 0.5rem;
 }
 
@@ -53,11 +53,9 @@
 }
 
 body {
-  background-color: rgb(var(--background));
   color: rgb(var(--foreground));
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
-  background: rgb(var(--background));
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
@@ -81,11 +79,16 @@ body {
 /* Enhanced card animations */
 .card-hover {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .card-hover:hover {
   transform: translateY(-8px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+.dark .card-hover {
+  box-shadow: none;
 }
 
 .dark .card-hover:hover {
@@ -113,13 +116,17 @@ body {
 
 /* Glassmorphism effect */
 .glass-effect {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.125);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .dark .glass-effect {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: none;
 }
 
 /* Focus styles */
@@ -188,9 +195,12 @@ body {
   background: linear-gradient(
     135deg,
     rgb(248, 250, 252) 0%,
-    rgb(241, 245, 249) 25%,
-    rgb(248, 250, 252) 50%,
-    rgb(241, 245, 249) 75%,
+    rgb(241, 245, 249) 15%,
+    rgb(248, 250, 252) 30%,
+    rgb(237, 242, 248) 45%,
+    rgb(241, 245, 249) 60%,
+    rgb(248, 250, 252) 75%,
+    rgb(241, 245, 249) 90%,
     rgb(248, 250, 252) 100%
   );
 }
@@ -206,3 +216,20 @@ body {
     rgb(12, 15, 31) 100%
   );
 }
+
+/* Enhanced light mode polish */
+html:not(.dark) {
+  --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-heavy: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+html:not(.dark) .rounded-2xl {
+  box-shadow: var(--shadow-light);
+}
+
+html:not(.dark) .border {
+  border-color: rgba(226, 232, 240, 0.6);
+}
+
+

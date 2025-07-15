@@ -5,6 +5,7 @@ import { MagnifyingGlassIcon, FunnelIcon, ChevronDownIcon } from '@heroicons/rea
 import Header from '@/src/components/layout/Header';
 import EnhancedAnimeCard from '@/src/components/EnhancedAnimeCard';
 import { createClient } from '@/src/lib/supabase/client';
+import { useDarkMode } from '@/src/hooks/useDarkMode';
 
 interface Anime {
   id: string;
@@ -56,6 +57,7 @@ export default function AnimesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [sortBy, setSortBy] = useState('score');
+  const { isDarkMode, mounted } = useDarkMode();
 
   useEffect(() => {
     const getUser = async () => {
@@ -193,7 +195,7 @@ export default function AnimesPage() {
     addToWatchlist(animeId);
   };
 
-  if (loading) {
+  if (loading || !mounted) {
     return (
       <div className="min-h-screen smooth-gradient transition-all duration-500">
         <Header />
@@ -201,7 +203,7 @@ export default function AnimesPage() {
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="flex flex-col items-center space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading anime database...</p>
+              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Loading anime database...</p>
             </div>
           </div>
         </div>
@@ -215,7 +217,11 @@ export default function AnimesPage() {
       
       <div className="content-wrapper section-padding py-8">
         {/* Search and Filters */}
-        <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200/30 dark:border-slate-700/30 p-6 mb-8">
+        <div className={`backdrop-blur-lg rounded-2xl p-6 mb-8 border ${
+          isDarkMode 
+            ? 'bg-slate-800/70 shadow-xl border-slate-700/30' 
+            : 'bg-card/40 shadow-sm border-border/30'
+        }`}>
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search Input */}
             <div className="relative flex-1 group">
@@ -224,9 +230,15 @@ export default function AnimesPage() {
                 placeholder="Search anime titles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-xl bg-gray-50/80 dark:bg-slate-700/80 border border-gray-200/50 dark:border-slate-600/50 hover:border-purple-300/60 dark:hover:border-purple-500/60 focus:outline-none focus:ring-0 focus:border-purple-400/80 dark:focus:border-purple-400/80 transition-all duration-300 text-gray-900 dark:text-slate-200 placeholder-gray-500 dark:placeholder-slate-400"
+                className={`w-full pl-12 pr-4 py-4 rounded-xl border hover:border-purple-300/40 focus:outline-none focus:ring-0 focus:border-purple-400/60 transition-all duration-300 ${
+                  isDarkMode
+                    ? 'bg-slate-700/80 border-slate-600/50 hover:border-purple-500/60 focus:border-purple-400/80 text-slate-200 placeholder-slate-400 shadow-none'
+                    : 'bg-input/60 border-border/20 hover:border-purple-300/40 focus:border-purple-400/60 text-foreground placeholder-muted-foreground shadow-sm'
+                }`}
               />
-              <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-slate-500 group-hover:text-purple-500 transition-colors duration-300" />
+              <MagnifyingGlassIcon className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 group-hover:text-purple-500 transition-colors duration-300 ${
+                isDarkMode ? 'text-slate-500' : 'text-muted-foreground'
+              }`} />
             </div>
 
             {/* Filters Row */}
@@ -236,7 +248,11 @@ export default function AnimesPage() {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="w-full appearance-none pl-4 pr-10 py-4 rounded-xl bg-gray-50/80 dark:bg-slate-700/80 border border-gray-200/50 dark:border-slate-600/50 hover:border-blue-300/60 dark:hover:border-blue-500/60 focus:outline-none focus:ring-0 focus:border-blue-400/80 dark:focus:border-blue-400/80 transition-all duration-300 text-gray-900 dark:text-slate-200 cursor-pointer"
+                  className={`w-full appearance-none pl-4 pr-10 py-4 rounded-xl border hover:border-blue-300/40 focus:outline-none focus:ring-0 focus:border-blue-400/60 transition-all duration-300 cursor-pointer ${
+                    isDarkMode
+                      ? 'bg-slate-700/80 border-slate-600/50 hover:border-blue-500/60 focus:border-blue-400/80 text-slate-200 shadow-none'
+                      : 'bg-input/60 border-border/20 hover:border-blue-300/40 focus:border-blue-400/60 text-foreground shadow-sm'
+                  }`}
                 >
                   <option value="">All Types</option>
                   <option value="TV">TV Series</option>
@@ -244,7 +260,9 @@ export default function AnimesPage() {
                   <option value="OVA">OVA</option>
                   <option value="Special">Special</option>
                 </select>
-                <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-slate-500 group-hover:text-blue-500 transition-colors duration-300 pointer-events-none" />
+                <ChevronDownIcon className={`absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 group-hover:text-blue-500 transition-colors duration-300 pointer-events-none ${
+                  isDarkMode ? 'text-slate-500' : 'text-muted-foreground'
+                }`} />
               </div>
 
               {/* Status Filter */}
@@ -252,14 +270,20 @@ export default function AnimesPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full appearance-none pl-4 pr-10 py-4 rounded-xl bg-gray-50/80 dark:bg-slate-700/80 border border-gray-200/50 dark:border-slate-600/50 hover:border-pink-300/60 dark:hover:border-pink-500/60 focus:outline-none focus:ring-0 focus:border-pink-400/80 dark:focus:border-pink-400/80 transition-all duration-300 text-gray-900 dark:text-slate-200 cursor-pointer"
+                  className={`w-full appearance-none pl-4 pr-10 py-4 rounded-xl border hover:border-pink-300/40 focus:outline-none focus:ring-0 focus:border-pink-400/60 transition-all duration-300 cursor-pointer ${
+                    isDarkMode
+                      ? 'bg-slate-700/80 border-slate-600/50 hover:border-pink-500/60 focus:border-pink-400/80 text-slate-200 shadow-none'
+                      : 'bg-input/60 border-border/20 hover:border-pink-300/40 focus:border-pink-400/60 text-foreground shadow-sm'
+                  }`}
                 >
                   <option value="">All Status</option>
                   <option value="Currently Airing">Currently Airing</option>
                   <option value="Finished Airing">Completed</option>
                   <option value="Not yet aired">Upcoming</option>
                 </select>
-                <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-slate-500 group-hover:text-pink-500 transition-colors duration-300 pointer-events-none" />
+                <ChevronDownIcon className={`absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 group-hover:text-pink-500 transition-colors duration-300 pointer-events-none ${
+                  isDarkMode ? 'text-slate-500' : 'text-muted-foreground'
+                }`} />
               </div>
 
               {/* Sort Dropdown */}
@@ -267,14 +291,20 @@ export default function AnimesPage() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full appearance-none pl-4 pr-10 py-4 rounded-xl bg-gray-50/80 dark:bg-slate-700/80 border border-gray-200/50 dark:border-slate-600/50 hover:border-green-300/60 dark:hover:border-green-500/60 focus:outline-none focus:ring-0 focus:border-green-400/80 dark:focus:border-green-400/80 transition-all duration-300 text-gray-900 dark:text-slate-200 cursor-pointer"
+                  className={`w-full appearance-none pl-4 pr-10 py-4 rounded-xl border hover:border-green-300/40 focus:outline-none focus:ring-0 focus:border-green-400/60 transition-all duration-300 cursor-pointer ${
+                    isDarkMode
+                      ? 'bg-slate-700/80 border-slate-600/50 hover:border-green-500/60 focus:border-green-400/80 text-slate-200 shadow-none'
+                      : 'bg-input/60 border-border/20 hover:border-green-300/40 focus:border-green-400/60 text-foreground shadow-sm'
+                  }`}
                 >
                   <option value="score">Top Rated</option>
                   <option value="year">Latest</option>
                   <option value="title">A-Z</option>
                   <option value="episodes">Episodes</option>
                 </select>
-                <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-slate-500 group-hover:text-green-500 transition-colors duration-300 pointer-events-none" />
+                <ChevronDownIcon className={`absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 group-hover:text-green-500 transition-colors duration-300 pointer-events-none ${
+                  isDarkMode ? 'text-slate-500' : 'text-muted-foreground'
+                }`} />
               </div>
             </div>
           </div>
@@ -285,9 +315,15 @@ export default function AnimesPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
             {[...Array(10)].map((_, index) => (
               <div key={index} className="animate-pulse">
-                <div className="bg-gray-200/60 dark:bg-slate-700/60 rounded-2xl aspect-[3/4] mb-3"></div>
-                <div className="h-4 bg-gray-200/60 dark:bg-slate-700/60 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200/60 dark:bg-slate-700/60 rounded w-3/4"></div>
+                <div className={`rounded-2xl aspect-[3/4] mb-3 ${
+                  isDarkMode ? 'bg-slate-700/60' : 'bg-gray-200/60'
+                }`}></div>
+                <div className={`h-4 rounded mb-2 ${
+                  isDarkMode ? 'bg-slate-700/60' : 'bg-gray-200/60'
+                }`}></div>
+                <div className={`h-3 rounded w-3/4 ${
+                  isDarkMode ? 'bg-slate-700/60' : 'bg-gray-200/60'
+                }`}></div>
               </div>
             ))}
           </div>
@@ -298,10 +334,16 @@ export default function AnimesPage() {
           <>
             {/* Results count */}
             <div className="mb-6">
-              <p className="text-gray-600 dark:text-slate-400">
-                Showing <span className="font-semibold text-gray-900 dark:text-slate-200">{filteredAnimes.length}</span> of <span className="font-semibold text-gray-900 dark:text-slate-200">{animes.length}</span> anime
+              <p className={`${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+                Showing <span className={`font-semibold ${
+                  isDarkMode ? 'text-slate-200' : 'text-gray-900'
+                }`}>{filteredAnimes.length}</span> of <span className={`font-semibold ${
+                  isDarkMode ? 'text-slate-200' : 'text-gray-900'
+                }`}>{animes.length}</span> anime
                 {searchQuery && (
-                  <span> matching "<span className="font-medium text-purple-600 dark:text-purple-400">{searchQuery}</span>"</span>
+                  <span> matching "<span className={`font-medium ${
+                    isDarkMode ? 'text-purple-400' : 'text-purple-600'
+                  }`}>{searchQuery}</span>"</span>
                 )}
               </p>
             </div>
@@ -352,12 +394,22 @@ export default function AnimesPage() {
             {/* No results message */}
             {filteredAnimes.length === 0 && !loading && (
               <div className="text-center py-12">
-                <div className="bg-white/70 dark:bg-slate-800/70 rounded-2xl p-8 shadow-lg border border-gray-200/30 dark:border-slate-700/30 max-w-md mx-auto backdrop-blur-sm">
-                  <svg className="w-16 h-16 text-gray-400 dark:text-slate-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className={`rounded-2xl p-8 shadow-lg border max-w-md mx-auto backdrop-blur-sm ${
+                  isDarkMode 
+                    ? 'bg-slate-800/70 border-slate-700/30' 
+                    : 'bg-white/70 border-gray-200/30'
+                }`}>
+                  <svg className={`w-16 h-16 mx-auto mb-4 ${
+                    isDarkMode ? 'text-slate-500' : 'text-gray-400'
+                  }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-200 mb-2">No anime found</h3>
-                  <p className="text-gray-600 dark:text-slate-400">Try adjusting your search terms or filters to find more results.</p>
+                  <h3 className={`text-lg font-semibold mb-2 ${
+                    isDarkMode ? 'text-slate-200' : 'text-gray-900'
+                  }`}>No anime found</h3>
+                  <p className={`${
+                    isDarkMode ? 'text-slate-400' : 'text-gray-600'
+                  }`}>Try adjusting your search terms or filters to find more results.</p>
                 </div>
               </div>
             )}
