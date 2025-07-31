@@ -10,6 +10,7 @@ import {
 } from '../../lib/server-service';
 import PostCreationModal from '../posts/PostCreationModal';
 import PostCard from '../posts/PostCard';
+import PostDetailView from '../posts/PostDetailView';
 
 interface ServerPostFeedProps {
   server: ServerWithDetails;
@@ -20,6 +21,7 @@ export function ServerPostFeed({ server, channel }: ServerPostFeedProps) {
   const [posts, setPosts] = useState<ServerPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const feedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,9 +75,37 @@ export function ServerPostFeed({ server, channel }: ServerPostFeedProps) {
     }
   };
 
-  const handleReply = (postId: string) => {
+  const handleReply = (_postId: string) => {
     setShowCreateModal(true);
   };
+
+  const handlePostClick = (postId: string) => {
+    setSelectedPostId(postId);
+  };
+
+  const handleBackToFeed = () => {
+    setSelectedPostId(null);
+  };
+
+  const handlePostUpdated = (updatedPost: ServerPost) => {
+    setPosts(prev => prev.map(post => 
+      post.id === updatedPost.id ? updatedPost : post
+    ));
+  };
+
+  const handlePostDeleted = (postId: string) => {
+    setPosts(prev => prev.filter(post => post.id !== postId));
+  };
+
+  // If a post is selected, show the post detail view
+  if (selectedPostId) {
+    return (
+      <PostDetailView 
+        postId={selectedPostId} 
+        onBack={handleBackToFeed}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -119,7 +149,15 @@ export function ServerPostFeed({ server, channel }: ServerPostFeedProps) {
         ) : (
           <div className="divide-y divide-border/30 dark:divide-slate-700/30">
             {posts.map((post) => (
-              <PostCard key={post.id} post={post} onLike={handleLike} onComment={handleReply} />
+              <PostCard 
+                key={post.id} 
+                post={post} 
+                onLike={handleLike} 
+                onComment={handleReply} 
+                onPostClick={handlePostClick}
+                onPostUpdated={handlePostUpdated}
+                onPostDeleted={handlePostDeleted}
+              />
             ))}
           </div>
         )}

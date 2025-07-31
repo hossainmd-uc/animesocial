@@ -35,15 +35,12 @@ export function JoinServerModal({ onClose, onServerJoined }: JoinServerModalProp
       setSubmitting(true);
       setError(null);
       
-      const success = await joinServer({ invite_code: inviteCode.trim() });
+      const result = await joinServer({ invite_code: inviteCode.trim() });
 
-      if (success) {
-        // Since joinServer doesn't return the server, we'll close the modal
-        // and let the parent component refresh the server list
-        onClose();
-        // You might want to show a success message here
+      if (result.success && result.server) {
+        onServerJoined(result.server);
       } else {
-        setError('Invalid invite code or server not found');
+        setError(result.error || 'Invalid invite code or server not found');
       }
     } catch (error) {
       console.error('Error joining server:', error);
@@ -77,12 +74,12 @@ export function JoinServerModal({ onClose, onServerJoined }: JoinServerModalProp
       setSubmitting(true);
       setError(null);
       
-      const success = await joinServer({ invite_code: server.invite_code });
+      const result = await joinServer({ invite_code: server.invite_code });
 
-      if (success) {
-        onServerJoined(server);
+      if (result.success && result.server) {
+        onServerJoined(result.server);
       } else {
-        setError('Failed to join server');
+        setError(result.error || 'Failed to join server');
       }
     } catch (error) {
       console.error('Error joining server:', error);

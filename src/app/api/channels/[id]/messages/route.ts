@@ -34,6 +34,7 @@ export async function GET(
       channel_id: m.channelId,
       author_id: m.authorId,
       content: m.content,
+      parent_id: (m as any).parentId || null,
       created_at: m.createdAt.toISOString(),
       updated_at: m.updatedAt.toISOString(),
       author: {
@@ -63,7 +64,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { content } = body;
+    const { content, parentId } = body;
     if (!content?.trim()) {
       return NextResponse.json({ error: 'Content required' }, { status: 400 });
     }
@@ -73,6 +74,7 @@ export async function POST(
         channelId,
         authorId: user.id,
         content: content.trim(),
+        ...(parentId && { parentId }),
       },
       include: {
         author: { select: { username: true, avatarUrl: true } }
@@ -84,6 +86,7 @@ export async function POST(
       channel_id: message.channelId,
       author_id: message.authorId,
       content: message.content,
+      parent_id: (message as any).parentId || null,
       created_at: message.createdAt.toISOString(),
       updated_at: message.updatedAt.toISOString(),
       author: {
@@ -92,7 +95,7 @@ export async function POST(
       },
     };
 
-    return NextResponse.json(formatted, { status: 201 });
+    return NextResponse.json(formatted);
   } catch (err) {
     console.error('Error creating message', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Header from '@/src/components/layout/Header';
-import { getServer, updateServer } from '@/src/lib/server-service';
+import { getServer, updateServer, regenerateInviteCode } from '@/src/lib/server-service';
 import type { ServerWithDetails } from '@/src/types/server';
 import { useDarkMode } from '@/src/hooks/useDarkMode';
 import { PhotoIcon, KeyIcon, ShieldCheckIcon, UserGroupIcon, ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
@@ -107,11 +107,20 @@ export default function ServerSettingsPage() {
     
     try {
       setSaving(true);
-      // This would call an API to regenerate the invite code
-      // For now, just show a success message
-      setSuccess('New invite code generated');
+      setError(null);
+      
+      const result = await regenerateInviteCode(server.id);
+      
+      if (result.success && result.invite_code) {
+        // Update the server state with new invite code
+        setServer(prev => prev ? { ...prev, invite_code: result.invite_code } : null);
+        setSuccess('New invite code generated successfully');
       setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError(result.error || 'Failed to generate new invite code');
+      }
     } catch (error) {
+      console.error('Error generating new invite code:', error);
       setError('Failed to generate new invite code');
     } finally {
       setSaving(false);

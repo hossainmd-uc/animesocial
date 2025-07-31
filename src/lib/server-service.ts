@@ -117,7 +117,7 @@ export async function searchServers(options: ServerSearchOptions = {}): Promise<
   }
 }
 
-export async function joinServer(data: JoinServerRequest): Promise<boolean> {
+export async function joinServer(data: JoinServerRequest): Promise<{ success: boolean; server?: Server; error?: string }> {
   try {
     const response = await fetch('/api/servers/join', {
       method: 'POST',
@@ -127,10 +127,38 @@ export async function joinServer(data: JoinServerRequest): Promise<boolean> {
       body: JSON.stringify(data),
     });
 
-    return response.ok;
+    if (response.ok) {
+      const result = await response.json();
+      return { success: true, server: result.server };
+    } else {
+      const errorData = await response.json();
+      return { success: false, error: errorData.error || 'Failed to join server' };
+    }
   } catch (error) {
     console.error('Error joining server:', error);
-    return false;
+    return { success: false, error: 'Network error occurred' };
+  }
+}
+
+export async function regenerateInviteCode(serverId: string): Promise<{ success: boolean; invite_code?: string; error?: string }> {
+  try {
+    const response = await fetch(`/api/servers/${serverId}/regenerate-invite`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      return { success: true, invite_code: result.invite_code };
+    } else {
+      const errorData = await response.json();
+      return { success: false, error: errorData.error || 'Failed to regenerate invite code' };
+    }
+  } catch (error) {
+    console.error('Error regenerating invite code:', error);
+    return { success: false, error: 'Network error occurred' };
   }
 }
 
@@ -280,6 +308,49 @@ export async function likePost(postId: string): Promise<boolean> {
 
 export async function unlikePost(postId: string): Promise<boolean> {
   return likePost(postId); // API handles toggle
+}
+
+export async function updatePost(
+  postId: string, 
+  data: { title?: string; content: string; image_url?: string; anime_id?: string }
+): Promise<ServerPost | null> {
+  try {
+    const response = await fetch(`/api/posts/${postId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update post');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating post:', error);
+    throw error;
+  }
+}
+
+export async function deletePost(postId: string): Promise<boolean> {
+  try {
+    const response = await fetch(`/api/posts/${postId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to delete post');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    throw error;
+  }
 }
 
 // ========== Message Management ==========
@@ -466,4 +537,66 @@ export function subscribeToServerPosts(
   return () => {
     supabase.removeChannel(subscription);
   };
+} 
+
+// Reply to a message
+export async function replyToMessage(
+  channelId: string,
+  parentId: string,
+  content: string
+): Promise<any> {
+  const response = await fetch(`/api/channels/${channelId}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, parentId })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to reply to message');
+  }
+
+  return response.json();
+}
+
+// Like a message
+export async function likeMessage(messageId: string): Promise<any> {
+  const response = await fetch(`/api/messages/${messageId}/like`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to like message');
+  }
+
+  return response.json();
+}
+
+// Unlike a message
+export async function unlikeMessage(messageId: string): Promise<any> {
+  const response = await fetch(`/api/messages/${messageId}/like`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to unlike message');
+  }
+
+  return response.json();
+}
+
+// Get message replies
+export async function getMessageReplies(messageId: string): Promise<any[]> {
+  const response = await fetch(`/api/messages/${messageId}/replies`);
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch message replies');
+  }
+
+  return response.json();
 } 

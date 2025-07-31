@@ -31,32 +31,36 @@ export async function GET(request: Request) {
       where.type = type;
     }
 
-    const animes = await prisma.anime.findMany({
-      where,
-      select: {
-        id: true,
-        malId: true,
-        title: true,
-        titleEnglish: true,
-        synopsis: true,
-        episodes: true,
-        score: true,
-        year: true,
-        status: true,
-        imageUrl: true,
-        type: true,
-        rating: true,
-      },
-      orderBy: {
-        score: 'desc',
-      },
-      take: limit,
-      skip: offset,
-    });
+    const animes = await Promise.race([
+      prisma.anime.findMany({
+        where,
+        select: {
+          id: true,
+          malId: true,
+          title: true,
+          titleEnglish: true,
+          synopsis: true,
+          episodes: true,
+          score: true,
+          year: true,
+          status: true,
+          imageUrl: true,
+          type: true,
+          rating: true,
+        },
+        orderBy: {
+          score: 'desc',
+        },
+        take: limit,
+        skip: offset,
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 15000))
+    ]) as any[];
 
     return NextResponse.json(animes);
   } catch (error) {
     console.error('Error fetching animes:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    // Return empty array instead of error when database is unreachable
+    return NextResponse.json([]);
   }
 } 

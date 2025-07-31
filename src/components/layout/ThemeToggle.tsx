@@ -26,7 +26,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="relative flex items-center justify-center w-12 h-12 rounded-full bg-gray-100/80 dark:bg-slate-700/80 hover:bg-gray-200/80 dark:hover:bg-slate-600/80 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 dark:focus:ring-offset-slate-800 group border border-gray-200/40 dark:border-slate-600/40"
+      className="relative flex items-center justify-center w-12 h-12 rounded-full bg-gray-100/80 dark:bg-slate-700/80 hover:bg-gray-200/80 dark:hover:bg-slate-600/80 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 dark:focus:ring-offset-slate-800 group"
       title={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
     >
       {/* Background glow effect */}

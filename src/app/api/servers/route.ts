@@ -17,23 +17,26 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const servers = await prisma.server.findMany({
-      where: {
-        members: {
-          some: {
-            profileId: user.id
+    const servers = await Promise.race([
+      prisma.server.findMany({
+        where: {
+          members: {
+            some: {
+              profileId: user.id
+            }
           }
-        }
-      },
-      include: {
-        _count: {
-          select: { members: true }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+        },
+        include: {
+          _count: {
+            select: { members: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 15000))
+    ]) as any[];
 
-    const formattedServers = servers.map(server => ({
+    const formattedServers = servers.map((server: any) => ({
       id: server.id,
       name: server.name,
       description: server.description,
@@ -49,7 +52,8 @@ export async function GET() {
     return NextResponse.json(formattedServers);
   } catch (error) {
     console.error('Error fetching user servers:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Return empty array instead of error when database is unreachable
+    return NextResponse.json([]);
   }
 }
 
@@ -68,16 +72,19 @@ export async function POST(request: NextRequest) {
 
     const inviteCode = generateInviteCode();
 
-    const server = await prisma.server.create({
-      data: {
-        name,
-        description,
-        iconUrl: icon_url,
-        isPublic: is_public ?? true,
-        ownerId: user.id,
-        inviteCode,
-      },
-    });
+    const server = await Promise.race([
+      prisma.server.create({
+        data: {
+          name,
+          description,
+          iconUrl: icon_url,
+          isPublic: is_public ?? true,
+          ownerId: user.id,
+          inviteCode,
+        },
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 15000))
+    ]) as any;
 
     // Create default channels
     const defaultChannels = [
@@ -86,21 +93,27 @@ export async function POST(request: NextRequest) {
       { name: 'recommendations', description: 'Share anime recommendations', type: 'text', position: 2 },
     ];
 
-    await prisma.serverChannel.createMany({
-      data: defaultChannels.map(channel => ({
-        ...channel,
-        serverId: server.id,
-      }))
-    });
+    await Promise.race([
+      prisma.serverChannel.createMany({
+        data: defaultChannels.map(channel => ({
+          ...channel,
+          serverId: server.id,
+        }))
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 15000))
+    ]);
 
     // Add creator as owner member
-    await prisma.serverMember.create({
-      data: {
-        serverId: server.id,
-        profileId: user.id,
-        role: 'owner',
-      }
-    });
+    await Promise.race([
+      prisma.serverMember.create({
+        data: {
+          serverId: server.id,
+          profileId: user.id,
+          role: 'owner',
+        }
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 15000))
+    ]);
 
     const formattedServer = {
       id: server.id,

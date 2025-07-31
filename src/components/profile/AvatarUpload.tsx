@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import React, { useState, useRef } from 'react'
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { Profile } from '@/src/types/profile'
+import Avatar from '../ui/Avatar'
 
 interface AvatarUploadProps {
   profile: Profile | null
@@ -86,17 +88,12 @@ export default function AvatarUpload({ profile, onAvatarUpdate }: AvatarUploadPr
     <div className="relative group">
       {/* Avatar Display */}
       <div className="relative">
-        {profile?.avatarUrl ? (
-          <img
-            className="h-16 w-16 rounded-full border-4 border-gray-300 object-cover"
-            src={profile.avatarUrl}
-            alt="Profile"
-          />
-        ) : (
-          <div className="h-16 w-16 bg-gray-400 rounded-full flex items-center justify-center border-4 border-gray-300">
-            <span className="text-xl text-white">👤</span>
-          </div>
-        )}
+        <Avatar
+          src={profile?.avatarUrl}
+          username={profile?.username || 'User'}
+          size="xl"
+          className="border-4 border-gray-300"
+        />
         
         {/* Online status indicator */}
         <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 border-2 border-white rounded-full"></div>

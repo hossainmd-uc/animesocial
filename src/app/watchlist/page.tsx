@@ -27,6 +27,7 @@ const statusOptions = [
   { value: 'all', label: 'All Status' },
   { value: 'watching', label: 'Watching' },
   { value: 'completed', label: 'Completed' },
+  { value: 'on_hold', label: 'On Hold' },
   { value: 'dropped', label: 'Dropped' },
   { value: 'plan_to_watch', label: 'Plan to Watch' },
 ];
@@ -65,10 +66,17 @@ export default function WatchlistPage() {
   const fetchUserLists = async () => {
     try {
       const response = await fetch('/api/user/anime-list');
-      const data = await response.json();
-      setUserAnimeList(data);
+      if (response.ok) {
+        const data = await response.json();
+        // Ensure data is an array before setting it
+        setUserAnimeList(Array.isArray(data) ? data : []);
+      } else {
+        console.error('Failed to fetch user lists:', response.status);
+        setUserAnimeList([]);
+      }
     } catch (error) {
       console.error('Error fetching user lists:', error);
+      setUserAnimeList([]);
     }
   };
 
@@ -82,6 +90,8 @@ export default function WatchlistPage() {
 
       if (response.ok) {
         await fetchUserLists();
+        // Notify other pages about the data change
+        localStorage.setItem('anime-list-updated', Date.now().toString());
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -98,6 +108,8 @@ export default function WatchlistPage() {
 
       if (response.ok) {
         await fetchUserLists();
+        // Notify other pages about the data change
+        localStorage.setItem('anime-list-updated', Date.now().toString());
       }
     } catch (error) {
       console.error('Error updating progress:', error);
@@ -114,6 +126,8 @@ export default function WatchlistPage() {
 
       if (response.ok) {
         await fetchUserLists();
+        // Notify other pages about the data change
+        localStorage.setItem('anime-list-updated', Date.now().toString());
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
@@ -142,11 +156,14 @@ export default function WatchlistPage() {
 
   // Filter data based on active tab
   const getFilteredData = () => {
+    // Ensure userAnimeList is an array
+    const safeUserAnimeList = Array.isArray(userAnimeList) ? userAnimeList : [];
+    
     const baseData = activeTab === 'favorites' 
-      ? userAnimeList.filter(item => item.isFavorite)
-      : userAnimeList; // Show all items in watchlist (both favorited and non-favorited)
+      ? safeUserAnimeList.filter(item => item.isFavorite)
+      : safeUserAnimeList; // Show all items in watchlist (both favorited and non-favorited)
 
-    let filtered = baseData;
+    let filtered = Array.isArray(baseData) ? baseData : [];
 
     // Apply status filter
     if (statusFilter !== 'all') {
@@ -156,8 +173,13 @@ export default function WatchlistPage() {
     // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(item =>
-        item.anime.title.toLowerCase().includes(searchQuery.toLowerCase())
+        item.anime?.title?.toLowerCase().includes(searchQuery.toLowerCase())
       );
+    }
+
+    // Ensure filtered is still an array before sorting
+    if (!Array.isArray(filtered)) {
+      return [];
     }
 
     // Sort by status priority: Watching → Completed → Dropped → Plan to Watch
@@ -178,15 +200,15 @@ export default function WatchlistPage() {
       }
       
       // If same status, sort alphabetically by title
-      return a.anime.title.localeCompare(b.anime.title);
+      return (a.anime?.title || '').localeCompare(b.anime?.title || '');
     });
 
     return filtered;
   };
 
   const filteredData = getFilteredData();
-  const watchlistCount = userAnimeList.length; // Total count of all anime in watchlist
-  const favoritesCount = userAnimeList.filter(item => item.isFavorite).length;
+  const watchlistCount = Array.isArray(userAnimeList) ? userAnimeList.length : 0; // Total count of all anime in watchlist
+  const favoritesCount = Array.isArray(userAnimeList) ? userAnimeList.filter(item => item.isFavorite).length : 0;
 
   if (loading || !mounted) {
     return (

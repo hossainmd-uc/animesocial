@@ -45,16 +45,42 @@ export default function EnhancedAnimeCard({
 }: EnhancedAnimeCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  const [statusValue, setStatusValue] = useState(status || 'Plan to Watch')
+  const [statusValue, setStatusValue] = useState(status || 'plan_to_watch')
   const [progressValue, setProgressValue] = useState(progress)
   const { isDarkMode, mounted } = useDarkMode()
 
   const handleStatusSubmit = () => {
+    // Auto-adjust progress based on status
+    let newProgress = progressValue;
+    if (statusValue === 'completed' && anime.episodes) {
+      newProgress = anime.episodes;
+      setProgressValue(anime.episodes);
+    } else if (statusValue === 'plan_to_watch') {
+      newProgress = 0;
+      setProgressValue(0);
+    }
+    
     onStatusChange?.(statusValue)
+    if (newProgress !== progressValue) {
+      onProgressChange?.(newProgress)
+    }
   }
 
   const handleProgressSubmit = () => {
+    // Auto-adjust status based on progress
+    let newStatus = statusValue;
+    if (progressValue === anime.episodes && anime.episodes && statusValue === 'watching') {
+      newStatus = 'completed';
+      setStatusValue('completed');
+    } else if (progressValue > 0 && statusValue === 'plan_to_watch') {
+      newStatus = 'watching';
+      setStatusValue('watching');
+    }
+    
     onProgressChange?.(progressValue)
+    if (newStatus !== statusValue) {
+      onStatusChange?.(newStatus)
+    }
   }
 
   if (!mounted) {
@@ -193,11 +219,11 @@ export default function EnhancedAnimeCard({
                 }`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <option value="Plan to Watch">Plan to Watch</option>
-                <option value="Watching">Watching</option>
-                <option value="Completed">Completed</option>
-                <option value="On Hold">On Hold</option>
-                <option value="Dropped">Dropped</option>
+                <option value="plan_to_watch">Plan to Watch</option>
+                <option value="watching">Watching</option>
+                <option value="completed">Completed</option>
+                <option value="on_hold">On Hold</option>
+                <option value="dropped">Dropped</option>
               </select>
 
               {/* Progress Input */}

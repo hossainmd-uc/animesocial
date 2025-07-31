@@ -8,27 +8,53 @@ datasource db {
 }
 
 model Profile {
-  id            String            @id @db.Uuid
-  username      String            @unique
-  displayName   String?           @map("display_name")
-  bio           String?
-  favoriteAnime String?           @map("favorite_anime")
-  avatarUrl     String?           @map("avatar_url")
-  status        String?
-  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  animeList     UserAnimeList[]
-  
-  // Server relationships
-  ownedServers  Server[]          @relation("ServerOwner")
-  serverMembers ServerMember[]    @relation("ServerMembership")
-  serverPosts   ServerPost[]      @relation("ServerPostAuthor")
-  serverMessages ServerMessage[]  @relation("ServerMessageAuthor")
-  postLikes     ServerPostLike[]  @relation("ServerPostLikes")
+  id             String              @id @db.Uuid
+  username       String              @unique
+  bio            String?
+  favoriteAnime  String?             @map("favorite_anime")
+  avatarUrl      String?             @map("avatar_url")
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  status         String?
+  displayName    String?             @map("display_name")
+  activityLogs   ActivityLog[]
+  serverMembers  ServerMember[]      @relation("ServerMembership")
+  messageLikes   ServerMessageLike[] @relation("ServerMessageLikes")
+  serverMessages ServerMessage[]     @relation("ServerMessageAuthor")
+  postLikes      ServerPostLike[]    @relation("ServerPostLikes")
+  serverPosts    ServerPost[]        @relation("ServerPostAuthor")
+  ownedServers   Server[]            @relation("ServerOwner")
+  animeList      UserAnimeList[]
 
   @@index([username])
   @@index([createdAt])
   @@map("profiles")
+}
+
+model AnimeSeries {
+  id            String          @id @default(cuid())
+  title         String
+  titleEnglish  String?         @map("title_english")
+  titleJapanese String?         @map("title_japanese")
+  description   String?
+  imageUrl      String?         @map("image_url")
+  status        String          @default("ongoing")
+  startYear     Int?            @map("start_year")
+  endYear       Int?            @map("end_year")
+  totalEpisodes Int?            @map("total_episodes")
+  averageScore  Float?          @map("average_score")
+  popularity    Int?
+  isMainEntry   Boolean         @default(false) @map("is_main_entry")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @default(now()) @updatedAt @map("updated_at")
+  activityLogs  ActivityLog[]
+  animes        Anime[]
+  userList      UserAnimeList[]
+
+  @@index([title])
+  @@index([status])
+  @@index([startYear])
+  @@map("anime_series")
 }
 
 model Anime {
@@ -60,6 +86,10 @@ model Anime {
   trailerUrl        String?              @map("trailer_url")
   createdAt         DateTime             @default(now()) @map("created_at")
   updatedAt         DateTime             @default(now()) @updatedAt @map("updated_at")
+  seriesId          String?              @map("series_id")
+  seriesOrder       Int?                 @map("series_order")
+  seriesType        String?              @map("series_type")
+  activityLogs      ActivityLog[]
   externalLinks     AnimeExternalLinks[]
   genres            AnimeGenres[]
   producers         AnimeProducers[]
@@ -67,9 +97,13 @@ model Anime {
   streaming         AnimeStreaming[]
   studios           AnimeStudios[]
   themes            AnimeThemes[]
+  series            AnimeSeries?         @relation(fields: [seriesId], references: [id])
+  serverPosts       ServerPost[]         @relation("ServerPostAnime")
   userList          UserAnimeList[]
-  serverPosts       ServerPost[]     @relation("ServerPostAnime")
 
+  @@index([seriesId])
+  @@index([seriesOrder])
+  @@index([seriesType])
   @@map("animes")
 }
 
@@ -196,28 +230,53 @@ model AnimeThemes {
 }
 
 model UserAnimeList {
-  id         String    @id @default(cuid())
-  profileId  String    @map("profile_id") @db.Uuid
-  animeId    String    @map("anime_id")
-  status     String
-  progress   Int       @default(0)
-  score      Float?
-  notes      String?
-  isFavorite Boolean   @default(false) @map("is_favorite")
-  startDate  DateTime? @map("start_date")
-  finishDate DateTime? @map("finish_date")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at")
-  anime      Anime     @relation(fields: [animeId], references: [id], onDelete: Cascade)
-  profile    Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id            String       @id @default(cuid())
+  profileId     String       @map("profile_id") @db.Uuid
+  animeId       String?      @map("anime_id")
+  status        String
+  progress      Int          @default(0)
+  score         Float?
+  notes         String?
+  isFavorite    Boolean      @default(false) @map("is_favorite")
+  startDate     DateTime?    @map("start_date")
+  finishDate    DateTime?    @map("finish_date")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @default(now()) @updatedAt @map("updated_at")
+  seriesId      String?      @map("series_id")
+  totalEpisodes Int?         @map("total_episodes")
+  anime         Anime?       @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  profile       Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  series        AnimeSeries? @relation(fields: [seriesId], references: [id], onDelete: Cascade)
 
   @@unique([profileId, animeId])
+  @@unique([profileId, seriesId])
   @@index([profileId])
   @@index([animeId])
+  @@index([seriesId])
   @@map("user_anime_list")
 }
 
-// Server Models
+model ActivityLog {
+  id         String       @id @default(cuid())
+  profileId  String       @map("profile_id") @db.Uuid
+  actionType String       @map("action_type")
+  animeId    String?      @map("anime_id")
+  seriesId   String?      @map("series_id")
+  oldValue   String?      @map("old_value")
+  newValue   String?      @map("new_value")
+  metadata   Json?
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  anime      Anime?       @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  profile    Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  series     AnimeSeries? @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, createdAt])
+  @@index([actionType])
+  @@index([animeId])
+  @@index([seriesId])
+  @@map("activity_logs")
+}
+
 model Server {
   id          String          @id @default(cuid())
   name        String
@@ -228,11 +287,10 @@ model Server {
   ownerId     String          @map("owner_id") @db.Uuid
   createdAt   DateTime        @default(now()) @map("created_at")
   updatedAt   DateTime        @default(now()) @updatedAt @map("updated_at")
-  
-  owner       Profile         @relation("ServerOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members     ServerMember[]
   channels    ServerChannel[]
+  members     ServerMember[]
   posts       ServerPost[]
+  owner       Profile         @relation("ServerOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([ownerId])
   @@index([inviteCode])
@@ -248,9 +306,8 @@ model ServerMember {
   joinedAt  DateTime @default(now()) @map("joined_at")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
-  
-  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
   profile   Profile  @relation("ServerMembership", fields: [profileId], references: [id], onDelete: Cascade)
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
 
   @@unique([serverId, profileId])
   @@index([serverId])
@@ -259,22 +316,21 @@ model ServerMember {
 }
 
 model ServerChannel {
-  id          String           @id @default(cuid())
-  serverId    String           @map("server_id")
+  id          String          @id @default(cuid())
+  serverId    String          @map("server_id")
   name        String
   description String?
-  type        String           @default("text")
-  position    Int              @default(0)
-  isPrivate   Boolean          @default(false) @map("is_private")
-  parentId    String?          @map("parent_id")
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @default(now()) @updatedAt @map("updated_at")
-  
-  server      Server           @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  parent      ServerChannel?   @relation("ChannelParent", fields: [parentId], references: [id])
-  children    ServerChannel[]  @relation("ChannelParent")
-  posts       ServerPost[]
+  type        String          @default("text")
+  position    Int             @default(0)
+  isPrivate   Boolean         @default(false) @map("is_private")
+  parentId    String?         @map("parent_id")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @default(now()) @updatedAt @map("updated_at")
+  parent      ServerChannel?  @relation("ChannelParent", fields: [parentId], references: [id])
+  children    ServerChannel[] @relation("ChannelParent")
+  server      Server          @relation(fields: [serverId], references: [id], onDelete: Cascade)
   messages    ServerMessage[]
+  posts       ServerPost[]
 
   @@index([serverId])
   @@index([parentId])
@@ -283,25 +339,24 @@ model ServerChannel {
 }
 
 model ServerPost {
-  id        String            @id @default(cuid())
-  serverId  String            @map("server_id")
-  channelId String?           @map("channel_id")
-  authorId  String            @map("author_id") @db.Uuid
+  id        String           @id @default(cuid())
+  serverId  String           @map("server_id")
+  channelId String?          @map("channel_id")
+  authorId  String           @map("author_id") @db.Uuid
   content   String
-  title     String?  @map("title")
-  imageUrl  String?           @map("image_url")
-  animeId   String?           @map("anime_id")
-  parentId  String?           @map("parent_id")
-  createdAt DateTime          @default(now()) @map("created_at")
-  updatedAt DateTime          @default(now()) @updatedAt @map("updated_at")
-  
-  server    Server            @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  channel   ServerChannel?    @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  author    Profile           @relation("ServerPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-  anime     Anime?            @relation("ServerPostAnime", fields: [animeId], references: [id], onDelete: SetNull)
-  parent    ServerPost?       @relation("PostReply", fields: [parentId], references: [id])
-  replies   ServerPost[]      @relation("PostReply")
+  title     String?          @map("title")
+  imageUrl  String?          @map("image_url")
+  animeId   String?          @map("anime_id")
+  parentId  String?          @map("parent_id")
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @default(now()) @updatedAt @map("updated_at")
   likes     ServerPostLike[]
+  anime     Anime?           @relation("ServerPostAnime", fields: [animeId], references: [id])
+  author    Profile          @relation("ServerPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  channel   ServerChannel?   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  parent    ServerPost?      @relation("PostReply", fields: [parentId], references: [id])
+  replies   ServerPost[]     @relation("PostReply")
+  server    Server           @relation(fields: [serverId], references: [id], onDelete: Cascade)
 
   @@index([serverId])
   @@index([channelId])
@@ -313,18 +368,22 @@ model ServerPost {
 }
 
 model ServerMessage {
-  id        String         @id @default(cuid())
-  channelId String         @map("channel_id")
-  authorId  String         @map("author_id") @db.Uuid
+  id        String              @id @default(cuid())
+  channelId String              @map("channel_id")
+  authorId  String              @map("author_id") @db.Uuid
   content   String
-  createdAt DateTime       @default(now()) @map("created_at")
-  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at")
-  
-  channel   ServerChannel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  author    Profile        @relation("ServerMessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @default(now()) @updatedAt @map("updated_at")
+  parentId  String?             @map("parent_id")
+  likes     ServerMessageLike[]
+  author    Profile             @relation("ServerMessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  channel   ServerChannel       @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  parent    ServerMessage?      @relation("MessageReply", fields: [parentId], references: [id])
+  replies   ServerMessage[]     @relation("MessageReply")
 
   @@index([channelId])
   @@index([authorId])
+  @@index([parentId])
   @@index([createdAt])
   @@map("server_messages")
 }
@@ -334,7 +393,6 @@ model ServerPostLike {
   postId    String     @map("post_id")
   profileId String     @map("profile_id") @db.Uuid
   createdAt DateTime   @default(now()) @map("created_at")
-  
   post      ServerPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   profile   Profile    @relation("ServerPostLikes", fields: [profileId], references: [id], onDelete: Cascade)
 
@@ -342,4 +400,18 @@ model ServerPostLike {
   @@index([postId])
   @@index([profileId])
   @@map("server_post_likes")
+}
+
+model ServerMessageLike {
+  id        String        @id @default(cuid())
+  messageId String        @map("message_id")
+  profileId String        @map("profile_id") @db.Uuid
+  createdAt DateTime      @default(now()) @map("created_at")
+  message   ServerMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  profile   Profile       @relation("ServerMessageLikes", fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, profileId])
+  @@index([messageId])
+  @@index([profileId])
+  @@map("server_message_likes")
 }

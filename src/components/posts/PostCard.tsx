@@ -2,22 +2,32 @@
 
 import { useState } from 'react';
 import type { ServerPost } from '../../types/server';
-import { HeartIcon, ChatBubbleLeftIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
+import { HeartIcon, ChatBubbleLeftIcon, ArrowTopRightOnSquareIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { useDarkMode } from '../../hooks/useDarkMode';
-import PostDetailModal from './PostDetailModal';
+import { useUser } from '../../hooks/useUser';
+import { deletePost } from '../../lib/server-service';
+import EditPostModal from './EditPostModal';
+import Avatar from '../ui/Avatar';
 
 interface Props {
   post: ServerPost;
   onLike: (postId: string) => void;
   onComment: (postId: string) => void;
+  onPostClick: (postId: string) => void;
+  onPostUpdated?: (updatedPost: ServerPost) => void;
+  onPostDeleted?: (postId: string) => void;
 }
 
-export default function PostCard({ post, onLike, onComment }: Props) {
-  const [showModal, setShowModal] = useState(false);
+export default function PostCard({ post, onLike, onComment, onPostClick, onPostUpdated, onPostDeleted }: Props) {
   const { isDarkMode, mounted } = useDarkMode();
+  const { user } = useUser();
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!mounted) return null;
+
+  const isOwner = user && post.author_id === user.id;
 
   const timeAgo = (date: string) => {
     const diff = Date.now() - new Date(date).getTime();
@@ -28,7 +38,7 @@ export default function PostCard({ post, onLike, onComment }: Props) {
   };
 
   const handlePostClick = () => {
-    setShowModal(true);
+    onPostClick(post.id);
   };
 
   const handleLikeClick = (e: React.MouseEvent) => {
@@ -39,6 +49,37 @@ export default function PostCard({ post, onLike, onComment }: Props) {
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onComment(post.id);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowEditModal(true);
+  };
+
+  const handleDeleteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await deletePost(post.id);
+      if (onPostDeleted) {
+        onPostDeleted(post.id);
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to delete post');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handlePostUpdated = (updatedPost: ServerPost) => {
+    if (onPostUpdated) {
+      onPostUpdated(updatedPost);
+    }
   };
 
   return (
@@ -70,20 +111,61 @@ export default function PostCard({ post, onLike, onComment }: Props) {
         onClick={handlePostClick}
       >
         <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center space-x-2">
-            <span className={`font-medium ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              {post.author?.username ?? 'Unknown'}
-            </span>
-            <span className="text-xs">•</span>
-            <span className={`${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              {timeAgo(post.created_at)}
-            </span>
+          <div className="flex items-center space-x-3">
+            <Avatar
+              src={post.author?.avatar_url}
+              username={post.author?.username ?? 'Unknown'}
+              size="sm"
+            />
+            <div className="flex items-center space-x-2">
+              <span className={`font-medium ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                {post.author?.username ?? 'Unknown'}
+              </span>
+              <span className="text-xs">•</span>
+              <span className={`${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                {timeAgo(post.created_at)}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            {/* Edit/Delete buttons for post owner */}
+            {isOwner && (
+              <>
+                <button
+                  onClick={handleEditClick}
+                  className={`p-1 rounded-md transition-colors duration-200 ${
+                    isDarkMode 
+                      ? 'text-gray-400 hover:text-white hover:bg-slate-600' 
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
+                  title="Edit post"
+                >
+                  <PencilIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleDeleteClick}
+                  disabled={isDeleting}
+                  className={`p-1 rounded-md transition-colors duration-200 disabled:opacity-50 ${
+                    isDarkMode 
+                      ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' 
+                      : 'text-red-500 hover:text-red-700 hover:bg-red-100'
+                  }`}
+                  title="Delete post"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+                <div className={`w-px h-4 ${
+                  isDarkMode ? 'bg-slate-600' : 'bg-gray-300'
+                }`}></div>
+              </>
+            )}
+            
+            {/* View Post link */}
+            <div className="flex items-center space-x-1">
             <ArrowTopRightOnSquareIcon className={`w-4 h-4 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
             }`} />
@@ -92,6 +174,7 @@ export default function PostCard({ post, onLike, onComment }: Props) {
             }`}>
               View Post
             </span>
+            </div>
           </div>
         </div>
         
@@ -132,12 +215,15 @@ export default function PostCard({ post, onLike, onComment }: Props) {
         )}
       </div>
       
-      {/* Post Detail Modal */}
-      <PostDetailModal 
-        postId={post.id}
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
+      {/* Edit Post Modal */}
+      {showEditModal && (
+        <EditPostModal
+          post={post}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onPostUpdated={handlePostUpdated}
       />
+      )}
     </div>
   );
 } 

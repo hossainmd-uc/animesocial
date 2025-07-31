@@ -44,9 +44,50 @@ export async function GET(
       }
     }
 
-    const replies = await prisma.serverPost.findMany({
+    // Find the root post of this thread
+    let rootPostId = postId;
+    let currentPostId = parentPost.parentId;
+    
+    // Walk up the parent chain to find the root post
+    while (currentPostId) {
+      const parent = await prisma.serverPost.findUnique({
+        where: { id: currentPostId }
+      });
+      if (!parent) break;
+      rootPostId = parent.id;
+      currentPostId = parent.parentId;
+    }
+
+    // Use PostgreSQL recursive CTE to efficiently get all replies in the thread
+    const threadReplies = await prisma.$queryRaw`
+      WITH RECURSIVE reply_tree AS (
+        -- Base case: direct replies to the root post
+        SELECT 
+          id, server_id, channel_id, author_id, content, title, 
+          image_url, anime_id, parent_id, created_at, updated_at
+        FROM server_posts 
+        WHERE parent_id = ${rootPostId}
+        
+        UNION ALL
+        
+        -- Recursive case: replies to replies
+        SELECT 
+          sp.id, sp.server_id, sp.channel_id, sp.author_id, sp.content, sp.title,
+          sp.image_url, sp.anime_id, sp.parent_id, sp.created_at, sp.updated_at
+        FROM server_posts sp
+        INNER JOIN reply_tree rt ON sp.parent_id = rt.id
+      )
+      SELECT * FROM reply_tree
+      ORDER BY created_at ASC
+      LIMIT ${limit} OFFSET ${offset}
+    ` as any[];
+
+    // Get the full post details for the reply IDs we found
+    const replyIds = threadReplies.map(r => r.id);
+    
+    const fullReplies = replyIds.length > 0 ? await prisma.serverPost.findMany({
       where: {
-        parentId: postId
+        id: { in: replyIds }
       },
       include: {
         author: {
@@ -77,12 +118,10 @@ export async function GET(
       },
       orderBy: {
         createdAt: 'asc'
-      },
-      take: limit,
-      skip: offset
-    });
+      }
+    }) : [];
 
-    const formattedReplies = replies.map((reply: any) => ({
+    const formattedReplies = fullReplies.map((reply: any) => ({
       id: reply.id,
       server_id: reply.serverId,
       channel_id: reply.channelId,

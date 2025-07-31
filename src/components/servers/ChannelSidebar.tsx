@@ -159,9 +159,9 @@ export function ChannelSidebar({
                 <button
                   key={channel.id}
                   onClick={() => onChannelSelect(channel)}
-                  className={`w-full flex items-center space-x-2 px-2 py-2 rounded-lg text-sm transition-all duration-150 group ${isActive ? 'bg-white/10 text-white font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}
+                  className={`w-full flex items-center space-x-2 px-2 py-2 rounded-lg text-sm transition-all duration-150 group ${isActive ? (isDarkMode ? 'bg-white/10 text-white font-semibold' : 'bg-blue-600/10 text-blue-900 font-semibold') : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-white' : getChannelTypeColor(channel.type)}`} />
+                  <Icon className={`w-5 h-5 ${isActive ? (isDarkMode ? 'text-white' : 'text-blue-700') : getChannelTypeColor(channel.type)}`} />
                   <span className="flex-1 text-left truncate font-medium">{channel.name}</span>
                   {channel.is_private && <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>}
                 </button>
@@ -187,9 +187,9 @@ export function ChannelSidebar({
               <button
                 key={channel.id}
                 onClick={() => onChannelSelect(channel)}
-                className={`w-full flex items-center space-x-2 px-2 py-2 rounded-lg text-sm transition-all duration-150 group ${isActive ? 'bg-white/10 text-white font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}
+                className={`w-full flex items-center space-x-2 px-2 py-2 rounded-lg text-sm transition-all duration-150 group ${isActive ? (isDarkMode ? 'bg-white/10 text-white font-semibold' : 'bg-blue-600/10 text-blue-900 font-semibold') : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : getChannelTypeColor(channel.type)}`} />
+                <Icon className={`w-5 h-5 ${isActive ? (isDarkMode ? 'text-white' : 'text-blue-700') : getChannelTypeColor(channel.type)}`} />
                 <span className="flex-1 text-left truncate font-medium">{channel.name}</span>
                 {channel.is_private && <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>}
               </button>
@@ -236,12 +236,12 @@ export function ChannelSidebar({
                         className={`
                           w-full flex items-center space-x-2 px-2 py-2 rounded-lg text-sm transition-all duration-150 group
                           ${isActive
-                            ? 'bg-white/10 text-white font-semibold'
+                            ? (isDarkMode ? 'bg-white/10 text-white font-semibold' : 'bg-blue-600/10 text-blue-900 font-semibold')
                             : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                           }
                         `}
                       >
-                        <Icon className={`w-5 h-5 ${isActive ? 'text-white' : getChannelTypeColor(channel.type)}`} />
+                        <Icon className={`w-5 h-5 ${isActive ? (isDarkMode ? 'text-white' : 'text-blue-700') : getChannelTypeColor(channel.type)}`} />
                         <span className="flex-1 text-left truncate font-medium">
                           {channel.name}
                         </span>

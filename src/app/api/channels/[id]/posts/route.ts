@@ -63,6 +63,7 @@ export async function GET(
       server_id: post.serverId,
       channel_id: post.channelId,
       author_id: post.authorId,
+      title: post.title,
       content: post.content,
       image_url: post.imageUrl,
       anime_id: post.animeId,

@@ -9,29 +9,34 @@ function formatMessage(m: any) {
     channel_id: m.channelId,
     author_id: m.authorId,
     content: m.content,
+    parent_id: m.parentId || null,
     created_at: m.createdAt.toISOString(),
     updated_at: m.updatedAt.toISOString(),
     author: {
       username: m.author?.username,
       avatar_url: m.author?.avatarUrl,
     },
+    like_count: 0, // TODO: Count likes
+    reply_count: 0, // TODO: Count replies
+    is_liked: false // TODO: Check if current user liked
   };
 }
 
-// GET /api/messages/[id]
+// GET /api/messages/[id] - Get a single message with author details
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id: messageId } = await params;
+
     const message = await prisma.serverMessage.findUnique({
-      where: { id },
+      where: { id: messageId },
       include: {
         author: {
-          select: { username: true, avatarUrl: true },
-        },
-      },
+          select: { username: true, avatarUrl: true }
+        }
+      }
     });
 
     if (!message) {
@@ -39,8 +44,8 @@ export async function GET(
     }
 
     return NextResponse.json(formatMessage(message));
-  } catch (err) {
-    console.error('Error fetching message', err);
+  } catch (error) {
+    console.error('Error fetching message:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

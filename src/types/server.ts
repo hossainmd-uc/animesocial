@@ -95,9 +95,13 @@ export interface ServerMessage {
   content: string;
   message_type: 'text' | 'image' | 'system';
   reply_to_id?: string;
+  parent_id?: string;
   edited_at?: string;
   updated_at?: string;
   created_at: string;
+  like_count?: number;
+  reply_count?: number;
+  is_liked?: boolean;
   // Joined data
   author?: {
     id: string;

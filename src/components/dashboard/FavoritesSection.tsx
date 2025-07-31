@@ -26,6 +26,7 @@ export default function FavoritesSection() {
   const [favorites, setFavorites] = useState<UserAnime[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [connectionError, setConnectionError] = useState(false);
   const { isDarkMode, mounted } = useDarkMode();
 
   useEffect(() => {
@@ -41,6 +42,29 @@ export default function FavoritesSection() {
     getUser();
   }, []);
 
+  // Listen for data changes from other pages
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'anime-list-updated' && user) {
+        fetchFavorites();
+      }
+    };
+
+    const handleFocus = () => {
+      if (user) {
+        fetchFavorites();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user]);
+
   const fetchFavorites = async () => {
     try {
       const response = await fetch('/api/user/anime-list');
@@ -48,17 +72,18 @@ export default function FavoritesSection() {
         const data = await response.json();
         const favoriteAnimes = data.filter((item: UserAnime) => item.isFavorite);
         
-        // Sort by status priority: Watching → Completed → Dropped → Plan to Watch
+        // Sort by status priority: Watching → Completed → On Hold → Dropped → Plan to Watch
         const statusPriority = {
           'watching': 1,
           'completed': 2,
-          'dropped': 3,
-          'plan_to_watch': 4
+          'on_hold': 3,
+          'dropped': 4,
+          'plan_to_watch': 5
         };
 
         favoriteAnimes.sort((a: UserAnime, b: UserAnime) => {
-          const priorityA = statusPriority[a.status as keyof typeof statusPriority] || 5;
-          const priorityB = statusPriority[b.status as keyof typeof statusPriority] || 5;
+          const priorityA = statusPriority[a.status as keyof typeof statusPriority] || 6;
+          const priorityB = statusPriority[b.status as keyof typeof statusPriority] || 6;
           
           // First sort by status priority
           if (priorityA !== priorityB) {
@@ -70,9 +95,14 @@ export default function FavoritesSection() {
         });
         
         setFavorites(favoriteAnimes);
+        setConnectionError(false);
+      } else {
+        console.error('Failed to fetch favorites:', response.status);
+        setConnectionError(true);
       }
     } catch (error) {
       console.error('Error fetching favorites:', error);
+      setConnectionError(true);
     }
   };
 
@@ -89,6 +119,12 @@ export default function FavoritesSection() {
         bgColor: 'bg-gradient-to-r from-green-500/80 to-green-600/80', 
         textColor: 'text-white',
         borderColor: 'border-green-400/30'
+      },
+      'on_hold': { 
+        label: 'On Hold', 
+        bgColor: 'bg-gradient-to-r from-yellow-500/80 to-yellow-600/80', 
+        textColor: 'text-white',
+        borderColor: 'border-yellow-400/30'
       },
       'dropped': { 
         label: 'Dropped', 
@@ -110,6 +146,7 @@ export default function FavoritesSection() {
   const getProgressBarColor = (status: string) => {
     if (status === 'completed') return 'bg-green-500';
     if (status === 'watching') return 'bg-blue-500';
+    if (status === 'on_hold') return 'bg-yellow-500';
     if (status === 'dropped') return 'bg-red-500';
     return 'bg-gray-400';
   };
@@ -170,6 +207,41 @@ export default function FavoritesSection() {
           <p className={`text-sm ${
             isDarkMode ? 'text-gray-400' : 'text-gray-500'
           }`}>Sign in to see your favorites</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (connectionError) {
+    return (
+      <div className={`backdrop-blur-xl rounded-2xl shadow-2xl p-6 h-96 flex flex-col border ${
+        isDarkMode 
+          ? 'bg-gray-800/90 border-gray-700/30' 
+          : 'bg-white/90 border-white/20'
+      }`}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className={`text-lg font-semibold ${
+            isDarkMode ? 'text-gray-100' : 'text-gray-900'
+          }`}>Favorites</h2>
+        </div>
+        <div className="text-center py-8 flex-1 flex flex-col justify-center">
+          <StarOutlineIcon className={`w-12 h-12 mx-auto mb-3 ${
+            isDarkMode ? 'text-gray-600' : 'text-gray-300'
+          }`} />
+          <h3 className={`text-sm font-medium mb-1 ${
+            isDarkMode ? 'text-gray-100' : 'text-gray-900'
+          }`}>Connection Error</h3>
+          <p className={`text-sm mb-4 ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            Could not connect to the server. Please try again later.
+          </p>
+          <Link 
+            href="/animes"
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+          >
+            Discover Anime
+          </Link>
         </div>
       </div>
     );

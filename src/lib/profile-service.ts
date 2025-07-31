@@ -5,32 +5,63 @@ import { createClient } from './supabase/server'
 export class ProfileService {
   // Get profile by ID - clean and type-safe
   static async getProfile(id: string) {
-    return await prisma.profile.findUnique({
-      where: { id }
-    })
+    try {
+      return await Promise.race([
+        prisma.profile.findUnique({
+          where: { id }
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 5000))
+      ]);
+    } catch (error) {
+      console.error('ProfileService.getProfile: Database error:', error);
+      return null;
+    }
   }
 
   // Ensure profile exists for user - creates if needed
   static async ensureProfile(userId: string, userEmail?: string, userMetadata?: any) {
-    const existingProfile = await prisma.profile.findUnique({
-      where: { id: userId }
-    })
+    try {
+      const existingProfile = await Promise.race([
+        prisma.profile.findUnique({
+          where: { id: userId }
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 5000))
+      ]);
 
-    if (existingProfile) {
-      return existingProfile
-    }
-
-    // Create profile with data from signup
-    const username = userMetadata?.username || userEmail?.split('@')[0] || `user_${userId.slice(0, 8)}`
-    
-    return await prisma.profile.create({
-      data: {
-        id: userId,
-        username,
-        displayName: userMetadata?.display_name || null,
-        avatarUrl: userMetadata?.avatar_url || null,
+      if (existingProfile) {
+        return existingProfile
       }
-    })
+
+      // Create profile with data from signup
+      const username = userMetadata?.username || userEmail?.split('@')[0] || `user_${userId.slice(0, 8)}`
+      
+      return await Promise.race([
+        prisma.profile.create({
+          data: {
+            id: userId,
+            username,
+            displayName: userMetadata?.display_name || null,
+            avatarUrl: userMetadata?.avatar_url || null,
+          }
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 5000))
+      ]);
+    } catch (error) {
+      console.error('ProfileService.ensureProfile: Database error:', error);
+      
+      // Return a fallback profile when database is unreachable
+      return {
+        id: userId,
+        username: userMetadata?.username || userEmail?.split('@')[0] || `user_${userId.slice(0, 8)}`,
+        displayName: userMetadata?.display_name || null,
+        bio: null,
+        favoriteAnime: null,
+        avatarUrl: userMetadata?.avatar_url || null,
+        status: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+    }
   }
 
   // Get profile by username - simple and readable

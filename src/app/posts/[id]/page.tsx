@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Header from '@/src/components/layout/Header';
-import { getPost, getPostReplies, likePost, createPost } from '@/src/lib/server-service';
+import { getPost, getPostReplies, likePost, createPost, deletePost } from '@/src/lib/server-service';
 import type { ServerPost } from '@/src/types/server';
 import { useDarkMode } from '@/src/hooks/useDarkMode';
-import { ArrowLeftIcon, HeartIcon, ChatBubbleLeftIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import { useUser } from '@/src/hooks/useUser';
+import { ArrowLeftIcon, HeartIcon, ChatBubbleLeftIcon, PaperAirplaneIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { createClient } from '@/src/lib/supabase/client';
+import EditReplyModal from '@/src/components/posts/EditReplyModal';
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -20,7 +22,10 @@ export default function PostDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [submittingReply, setSubmittingReply] = useState(false);
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [deletingReplyId, setDeletingReplyId] = useState<string | null>(null);
   const { isDarkMode, mounted } = useDarkMode();
+  const { user } = useUser();
 
   useEffect(() => {
     loadPost();
@@ -96,6 +101,40 @@ export default function PostDetailPage() {
       console.error('Error creating reply:', error);
     } finally {
       setSubmittingReply(false);
+    }
+  };
+
+  const handleReplyUpdated = (updatedReply: ServerPost) => {
+    setReplies(prev => prev.map(reply => 
+      reply.id === updatedReply.id ? updatedReply : reply
+    ));
+  };
+
+  const handleReplyEdit = (replyId: string) => {
+    setEditingReplyId(replyId);
+  };
+
+  const handleReplyDelete = async (replyId: string) => {
+    if (!window.confirm('Are you sure you want to delete this reply? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setDeletingReplyId(replyId);
+      await deletePost(replyId);
+      setReplies(prev => prev.filter(reply => reply.id !== replyId));
+      // Update reply count
+      setPost(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          reply_count: prev.reply_count - 1,
+        };
+      });
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to delete reply');
+    } finally {
+      setDeletingReplyId(null);
     }
   };
 
@@ -349,11 +388,16 @@ export default function PostDetailPage() {
                 </h3>
                 
                 <div className="space-y-4">
-                  {replies.map((reply) => (
+                  {replies.map((reply) => {
+                    const isOwner = user && reply.author_id === user.id;
+                    const isDeleting = deletingReplyId === reply.id;
+                    
+                    return (
                     <div key={reply.id} className={`${
                       isDarkMode ? 'bg-slate-800/30 border-slate-700/50' : 'bg-white/30 border-gray-200/50'
-                    } rounded-lg border backdrop-blur-sm p-4`}>
-                      <div className="flex items-center space-x-3 mb-3">
+                      } rounded-lg border backdrop-blur-sm p-4 group`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
                         <div className={`w-8 h-8 ${
                           isDarkMode ? 'bg-slate-700' : 'bg-gray-200'
                         } rounded-full flex items-center justify-center`}>
@@ -375,6 +419,36 @@ export default function PostDetailPage() {
                             {timeAgo(reply.created_at)}
                           </p>
                         </div>
+                          </div>
+                          
+                          {/* Edit/Delete buttons for reply owner */}
+                          {isOwner && (
+                            <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <button
+                                onClick={() => handleReplyEdit(reply.id)}
+                                className={`p-2 rounded-md transition-colors duration-200 ${
+                                  isDarkMode 
+                                    ? 'text-gray-400 hover:text-white hover:bg-slate-600' 
+                                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                }`}
+                                title="Edit reply"
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleReplyDelete(reply.id)}
+                                disabled={isDeleting}
+                                className={`p-2 rounded-md transition-colors duration-200 disabled:opacity-50 ${
+                                  isDarkMode 
+                                    ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' 
+                                    : 'text-red-500 hover:text-red-700 hover:bg-red-100'
+                                }`}
+                                title="Delete reply"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
                       </div>
                       
                       <p className={`${
@@ -383,13 +457,24 @@ export default function PostDetailPage() {
                         {reply.content}
                       </p>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
+      
+      {/* Edit Reply Modal */}
+      {editingReplyId && (
+        <EditReplyModal
+          reply={replies.find(r => r.id === editingReplyId)!}
+          isOpen={!!editingReplyId}
+          onClose={() => setEditingReplyId(null)}
+          onReplyUpdated={handleReplyUpdated}
+        />
+      )}
     </div>
   );
 } 
