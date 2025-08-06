@@ -1,149 +1,106 @@
-# 🎌 Anime Social Hub
+# Web Development Final Project - Anime Hub
 
-A modern social media platform for anime fans to connect, track their anime journey, and discover new favorites.
+Submitted by: Md Hossain
 
-## Features
+This web app: Anime Hub
 
-### Phase 1: Core Social Foundation (Current)
-- ✅ **User Authentication** - Secure login system with email/password and Google OAuth integration for seamless onboarding
-- ✅ **Rich User Profiles** - Customizable profiles featuring favorite anime, bio, avatar, and personal anime preferences showcase
-- 🚧 **Anime Database Integration** - Integration with MyAnimeList API for comprehensive anime data including ratings, genres, studio info, and episode details
-- 🚧 **Personal Tracking Lists** - Individual anime lists for "Watching", "Completed", "Plan to Watch", "On Hold", and "Dropped" with progress tracking and personal ratings
+Time spent: 180 hours spent in total
 
-### Phase 2: Social Discovery Engine (Planned)
-- 🚧 **Smart Anime Recommendations** - AI-powered personalized anime discovery using collaborative filtering and content analysis to suggest shows you'll love
-- 🚧 **Community Content Discovery** - Find interesting people through their anime reviews, lists, fan theories, and creative content rather than algorithmic matching
-- 🚧 **Natural Interaction Systems** - Low-pressure ways to engage: reactions, bookmarking content, and direct messaging for deeper conversations
+## Required Features
 
-### Phase 3: Dynamic Community Hubs (Planned)
-- 🚧 **Living Community Hubs per anime** - Dynamic discussion spaces for each anime series with real-time updates, fan art galleries, theory discussions, and community-driven content
-- 🚧 **Episode Live-Lounges** - Real-time chat rooms that open during episode air times, with built-in spoiler protection and synchronized discussion threads
-- 🚧 **Watch Party Coordination** - Tools to organize synchronized viewing sessions with friends, complete with video sync, voice chat integration, and shared reactions
+The following **required** functionality is completed:
 
-## Tech Stack
 
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
-- **Backend**: Supabase (PostgreSQL, Authentication, Real-time)
-- **Deployment**: Vercel (recommended)
+- [x] **Web app includes a create form that allows the user to create posts**
+  - Form requires users to add a post title
+  - Forms should have the *option* for users to add: 
+    - additional textual content
+    - an image added as an external image URL
+- [x] **Web app includes a home feed displaying previously created posts**
+  - Web app must include home feed displaying previously created posts
+  - By default, each post on the posts feed should show only the post's:
+    - creation time
+    - title 
+    - upvotes count
+  - Clicking on a post should direct the user to a new page for the selected post
+- [ ] **Users can view posts in different ways**
+  - Users can sort posts by either:
+    -  creation time
+    -  upvotes count
+  - Users can search for posts by title
+- [x] **Users can interact with each post in different ways**
+  - The app includes a separate post page for each created post when clicked, where any additional information is shown, including:
+    - content
+    - image
+    - comments
+  - Users can leave comments underneath a post on the post page
+  - Each post includes an upvote button on the post page. 
+    - Each click increases the post's upvotes count by one
+    - Users can upvote any post any number of times
 
-## Getting Started
+- [x] **A post that a user previously created can be edited or deleted from its post pages**
+  - After a user creates a new post, they can go back and edit the post
+  - A previously created post can be deleted from its post page
 
-### Prerequisites
+The following **optional** features are implemented:
 
-- Node.js 18+ and npm
-- A Supabase account
 
-### 1. Clone and Install
+- [x] Web app implements pseudo-authentication
+  - Users can only edit and delete posts or delete comments by entering the secret key, which is set by the user during post creation
+  - **or** upon launching the web app, the user is assigned a random user ID. It will be associated with all posts and comments that they make and displayed on them
+  - For both options, only the original user author of a post can update or delete it
+- [ ] Users can repost a previous post by referencing its post ID. On the post page of the new post
+  - Users can repost a previous post by referencing its post ID
+  - On the post page of the new post, the referenced post is displayed and linked, creating a thread
+- [x] Users can customize the interface
+  - e.g., selecting the color scheme or showing the content and image of each post on the home feed
+- [x] Users can add more characterics to their posts
+  - Users can share and view web videos
+  - Users can set flags such as "Question" or "Opinion" while creating a post
+  - Users can filter posts by flags on the home feed
+  - Users can upload images directly from their local machine as an image file
+- [x] Web app displays a loading animation whenever data is being fetched
 
-```bash
-git clone <your-repo>
-cd anime-social-app
-npm install
-```
+The following **additional** features are implemented:
 
-### 2. Set up Supabase
+* [x] List anything else that you added to improve the site's functionality!
+  Connection to Anime database using Jikan API
+  Rich User Profiles
+  Watchlist functionality
+  Server Creation + Joining + Invitation
+  Live Chat
+  Anime Browsing
+  Account Creation
+  Light/Dark Mode
+  Navigation Bar
 
-1. Create a new Supabase project at [https://supabase.com](https://supabase.com)
-2. Go to Project Settings > API
-3. Copy your project URL and anon key
+## Video Walkthrough
 
-### 3. Configure Environment Variables
+Here's a walkthrough of implemented user stories:
 
-Create a `.env.local` file in the root directory:
+<img src='https://i.imgur.com/Jmp8WTD.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-```
+<!-- Replace this with whatever GIF tool you used! -->
+GIF created with ...  
+[ScreenToGif](https://www.screentogif.com/) for Windows
 
-### 4. Set up Database
 
-1. Go to your Supabase project dashboard
-2. Navigate to SQL Editor
-3. Run the SQL from `database/schema.sql` to create the profiles table and setup RLS policies
+## Notes
 
-### 5. Configure Authentication (Optional)
-
-For Google OAuth:
-1. Go to Authentication > Providers in your Supabase dashboard
-2. Enable Google provider
-3. Add your Google OAuth credentials
-
-### 6. Run the Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to see your app.
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── auth/           # Authentication pages
-│   ├── dashboard/      # Protected dashboard
-│   └── layout.tsx      # Root layout
-├── components/
-│   ├── auth/           # Auth components
-│   └── profile/        # Profile components
-├── lib/
-│   └── supabase/       # Supabase configuration
-└── middleware.ts       # Auth middleware
-```
-
-## Database Schema
-
-### Profiles Table
-
-```sql
-CREATE TABLE profiles (
-  id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
-  username TEXT UNIQUE,
-  full_name TEXT,
-  bio TEXT,
-  favorite_anime TEXT,
-  avatar_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
-## Development Roadmap
-
-- [ ] **Phase 1**: Complete core social foundation
-  - [ ] **Anime Database Integration** - Connect with MyAnimeList API for real-time anime data, ratings, and metadata
-  - [ ] **Personal Tracking Lists** - Build comprehensive anime tracking system with status updates and progress logging
-  - [ ] **Episode-level Progress Logging** - Granular tracking of episode viewing with timestamps and notes
-  - [ ] **Advanced Profile Customization** - Custom themes, badges, and anime milestone achievements
-  
-- [ ] **Phase 2**: Build social discovery engine
-  - [ ] **Smart Anime Recommendations** - Develop AI recommendation engine using collaborative filtering for personalized anime discovery
-  - [ ] **Community Content System** - Build review, rating, and list sharing features where users naturally discover each other through quality content
-  - [ ] **Natural Interaction Tools** - Implement reactions, bookmarking, and streamlined direct messaging system
-  - [ ] **Content Discovery Feed** - Curated feed showing interesting reviews, lists, and discussions from the community rather than algorithmic friend suggestions
-  - [ ] **Interest-Based Groupings** - Optional communities around specific anime, genres, or activities (join/leave freely, no algorithm required)
-  
-- [ ] **Phase 3**: Launch community features
-  - [ ] **Living Community Hubs** - Real-time discussion boards with moderation tools and content curation
-  - [ ] **Episode Live-Lounges** - Synchronized chat rooms with spoiler tags and reaction tracking
-  - [ ] **Watch Party Coordination** - Video synchronization engine with voice/text chat integration
-  - [ ] **Community Events** - Anime tournament brackets, seasonal watch challenges, and fan art contests
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+Describe any challenges encountered while building the app.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+    Copyright [yyyy] [name of copyright owner]
 
----
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-Built with ❤️ for the anime community
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
