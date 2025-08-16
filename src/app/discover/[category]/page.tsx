@@ -58,29 +58,29 @@ interface CategoryInfo {
 }
 
 const categoryData: { [key: string]: CategoryInfo } = {
-  's-tier': {
-    title: 'S-Tier Legends',
-    description: 'The absolute pinnacle of anime excellence with 9.0+ ratings',
-    gradient: 'from-yellow-400 via-orange-500 to-red-600',
-    icon: '👑'
+  'eternal-classics': {
+    title: 'Eternal Classics',
+    description: 'Timeless anime excellence with 8.0+ ratings - stories that stand the test of time',
+    gradient: 'from-red-400 via-pink-500 to-rose-600',
+    icon: '❤️'
   },
-  'a-rank': {
-    title: 'A-Rank Champions',
-    description: 'Elite tier anime with exceptional 8.5+ ratings',
-    gradient: 'from-blue-400 via-purple-500 to-pink-600',
+  'heartfelt-journeys': {
+    title: 'Heartfelt Journeys',
+    description: 'Beloved anime with solid 7.5-7.9 ratings that have won the hearts of viewers',
+    gradient: 'from-yellow-400 via-orange-500 to-amber-600',
     icon: '⭐'
   },
-  'quick-missions': {
-    title: 'Quick Missions',
-    description: 'Perfect for short sessions - movies and series ≤12 episodes',
-    gradient: 'from-green-400 via-cyan-500 to-blue-600',
-    icon: '⚡'
+  'mini-masterpieces': {
+    title: 'Mini Masterpieces',
+    description: 'Perfect bite-sized gems - movies and series ≤12 episodes that pack a punch',
+    gradient: 'from-emerald-400 via-teal-500 to-cyan-600',
+    icon: '✨'
   },
-  'campaign-mode': {
-    title: 'Campaign Mode',
-    description: 'Epic long-running adventures with extensive episode counts',
-    gradient: 'from-purple-400 via-pink-500 to-red-600',
-    icon: '🎮'
+  'binge-worthy': {
+    title: 'Binge-Worthy',
+    description: 'Epic long-running adventures with extensive episode counts perfect for marathon viewing',
+    gradient: 'from-indigo-400 via-purple-500 to-violet-600',
+    icon: '▶️'
   }
 };
 
@@ -240,11 +240,11 @@ export default function CategoryPage() {
   // Apply category filtering using the same logic as discover page
   const applyCategoryFilter = (seriesData: Series[], category: string): Series[] => {
     switch (category) {
-      case 's-tier':
-        return seriesData.filter(s => s.averageScore && s.averageScore >= 9.0);
-      case 'a-rank':
-        return seriesData.filter(s => s.averageScore && s.averageScore >= 8.5 && s.averageScore < 9.0);
-      case 'quick-missions':
+      case 'eternal-classics':
+        return seriesData.filter(s => s.averageScore && s.averageScore >= 8.0);
+      case 'heartfelt-journeys':
+        return seriesData.filter(s => s.averageScore && s.averageScore >= 7.5 && s.averageScore < 8.0);
+      case 'mini-masterpieces':
         return seriesData.filter(s => {
           const hasLongContent = s.animes.some(a => a.episodes && a.episodes > 12);
           if (hasLongContent) return false;
@@ -253,7 +253,7 @@ export default function CategoryPage() {
           const hasShortSeries = s.animes.some(a => a.episodes && a.episodes <= 12);
           return hasMovies || hasShortSeries;
         });
-      case 'campaign-mode':
+      case 'binge-worthy':
         return seriesData.filter(s => {
           const hasLongContent = s.animes.some(a => a.episodes && a.episodes > 12);
           return hasLongContent;

@@ -153,10 +153,10 @@ export default function FavoritesSection() {
 
   if (loading || !mounted) {
     return (
-      <div className={`backdrop-blur-xl rounded-2xl shadow-2xl p-6 h-96 flex flex-col border ${
+      <div className={`backdrop-blur-xl rounded-2xl p-6 h-96 flex flex-col transition-all duration-300 ${
         isDarkMode 
-          ? 'bg-gray-800/90 border-gray-700/30' 
-          : 'bg-white/90 border-white/20'
+          ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20' 
+          : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5'
       }`}>
         <div className="flex items-center justify-between mb-6">
           <h2 className={`text-lg font-semibold ${
@@ -165,10 +165,10 @@ export default function FavoritesSection() {
         </div>
         <div className="space-y-4 flex-1">
           {[1, 2, 3].map((item) => (
-            <div key={item} className={`backdrop-blur-sm rounded-xl h-20 flex items-center px-4 animate-pulse border ${
+            <div key={item} className={`backdrop-blur-sm rounded-xl h-20 flex items-center px-4 animate-pulse ${
               isDarkMode 
-                ? 'bg-gray-700/60 border-gray-600/30' 
-                : 'bg-gray-100/60 border-gray-200/30'
+                ? 'bg-gray-700/30 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.05)]' 
+                : 'bg-gray-200/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)]'
             }`}>
               <div className={`w-14 h-14 rounded-lg mr-4 ${
                 isDarkMode ? 'bg-gray-600/70' : 'bg-gray-200/70'
@@ -190,10 +190,10 @@ export default function FavoritesSection() {
 
   if (!user) {
     return (
-      <div className={`backdrop-blur-xl rounded-2xl shadow-2xl p-6 h-96 flex flex-col border ${
+      <div className={`backdrop-blur-xl rounded-2xl p-6 h-96 flex flex-col transition-all duration-300 ${
         isDarkMode 
-          ? 'bg-gray-800/90 border-gray-700/30' 
-          : 'bg-white/90 border-white/20'
+          ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20' 
+          : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5'
       }`}>
         <div className="flex items-center justify-between mb-6">
           <h2 className={`text-lg font-semibold ${
@@ -214,10 +214,10 @@ export default function FavoritesSection() {
 
   if (connectionError) {
     return (
-      <div className={`backdrop-blur-xl rounded-2xl shadow-2xl p-6 h-96 flex flex-col border ${
+      <div className={`backdrop-blur-xl rounded-2xl p-6 h-96 flex flex-col transition-all duration-300 ${
         isDarkMode 
-          ? 'bg-gray-800/90 border-gray-700/30' 
-          : 'bg-white/90 border-white/20'
+          ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20' 
+          : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5'
       }`}>
         <div className="flex items-center justify-between mb-6">
           <h2 className={`text-lg font-semibold ${
@@ -248,16 +248,16 @@ export default function FavoritesSection() {
   }
 
   return (
-    <div className={`backdrop-blur-xl rounded-2xl shadow-2xl p-6 h-96 flex flex-col border ${
+    <div className={`backdrop-blur-xl rounded-2xl p-6 h-96 flex flex-col transition-all duration-300 hover:bg-opacity-60 container-integrated ${
       isDarkMode 
-        ? 'bg-gray-800/90 border-gray-700/30' 
-        : 'bg-white/90 border-white/20'
+        ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20 hover:shadow-gray-900/30' 
+        : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5 hover:shadow-gray-900/10'
     }`}>
       <div className="flex items-center justify-between mb-6">
         <h2 className={`text-lg font-semibold ${
           isDarkMode ? 'text-gray-100' : 'text-gray-900'
         }`}>
-          Favorites ({favorites.length})
+          Favorites
         </h2>
         <Link 
           href="/watchlist?tab=favorites"
@@ -280,17 +280,17 @@ export default function FavoritesSection() {
           {favorites.slice(0, 10).map((item) => (
             <div 
               key={item.id} 
-              className={`backdrop-blur-sm rounded-xl p-3 flex items-center transition-all duration-300 group border ${
+              className={`backdrop-blur-sm rounded-xl p-3 flex items-center transition-all duration-300 group ${
                 isDarkMode
-                  ? 'bg-gradient-to-r from-gray-700/70 to-gray-600/70 hover:from-gray-600/80 hover:to-gray-500/80 border-gray-600/30'
-                  : 'bg-gradient-to-r from-gray-50/70 to-gray-100/70 hover:from-gray-100/80 hover:to-gray-200/80 border-gray-200/30'
+                  ? 'bg-gradient-to-r from-gray-700/30 to-gray-600/30 hover:from-gray-600/50 hover:to-gray-500/50 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.05)] hover:shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)]'
+                  : 'bg-gradient-to-r from-gray-200/20 to-gray-300/20 hover:from-gray-300/40 hover:to-gray-400/40 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25)]'
               }`}
             >
               {/* Anime Image */}
-              <div className={`w-12 h-16 rounded-lg mr-4 overflow-hidden flex-shrink-0 border ${
+              <div className={`w-12 h-16 rounded-lg mr-4 overflow-hidden flex-shrink-0 shadow-sm ${
                 isDarkMode 
-                  ? 'bg-gray-600/50 border-gray-500/30' 
-                  : 'bg-gray-200/50 border-gray-300/30'
+                  ? 'bg-gray-600/30 ring-1 ring-gray-500/20' 
+                  : 'bg-gray-200/30 ring-1 ring-gray-300/20'
               }`}>
                 {item.anime.imageUrl ? (
                   <img

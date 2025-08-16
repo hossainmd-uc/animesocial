@@ -136,10 +136,16 @@ export default function GenreStatsSection() {
 
   if (!mounted) {
     return (
-      <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/20 animate-pulse">
+      <div className={`backdrop-blur-xl rounded-2xl p-6 h-96 flex flex-col animate-pulse container-integrated ${
+        isDarkMode 
+          ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20' 
+          : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5'
+      }`}>
         <div className="h-6 bg-gray-200 rounded mb-6 w-1/2"></div>
-        <div className="flex items-center justify-center">
-          <div className="w-64 h-64 bg-gray-100 rounded-lg"></div>
+        <div className="flex items-center justify-center flex-1">
+          <div className={`w-64 h-64 rounded-lg ${
+            isDarkMode ? 'bg-gray-700/20' : 'bg-gray-100/20'
+          }`}></div>
         </div>
       </div>
     )
@@ -147,17 +153,17 @@ export default function GenreStatsSection() {
 
   if (loading) {
     return (
-      <div className={`backdrop-blur-xl rounded-2xl shadow-2xl p-6 border gamer-card-hover scan-lines ${
+      <div className={`backdrop-blur-xl rounded-2xl p-6 h-96 flex flex-col gamer-card-hover transition-all duration-300 container-integrated ${
         isDarkMode 
-          ? 'bg-gray-800/90 border-gray-700/30' 
-          : 'bg-white/90 border-white/20'
+          ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20' 
+          : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5'
       } animate-pulse`}>
         <div className={`h-6 rounded mb-6 w-1/2 ${
           isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
         }`}></div>
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center flex-1">
           <div className={`w-64 h-64 rounded-lg ${
-            isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+            isDarkMode ? 'bg-gray-700/20' : 'bg-gray-100/20'
           }`}></div>
         </div>
       </div>
@@ -166,25 +172,25 @@ export default function GenreStatsSection() {
 
   if (genres.length === 0) {
     return (
-      <div className={`backdrop-blur-xl rounded-2xl shadow-2xl p-6 border gamer-card-hover scan-lines ${
+      <div className={`backdrop-blur-xl rounded-2xl p-6 h-96 flex flex-col gamer-card-hover transition-all duration-300 hover:bg-opacity-60 container-integrated ${
         isDarkMode 
-          ? 'bg-gray-800/90 border-gray-700/30' 
-          : 'bg-white/90 border-white/20'
+          ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20 hover:shadow-gray-900/30' 
+          : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5 hover:shadow-gray-900/10'
       }`}>
         <h2 className={`text-lg font-semibold mb-6 ${
           isDarkMode ? 'text-gray-100' : 'text-gray-900'
         }`}>Favorite Genres</h2>
         
-        <div className={`text-center py-12 ${
+        <div className={`text-center py-8 flex-1 flex flex-col justify-center ${
           isDarkMode ? 'text-gray-400' : 'text-gray-500'
         }`}>
-          <div className="mb-4">
-            <ChartBarIcon className={`w-16 h-16 mx-auto ${
+          <div className="mb-3">
+            <ChartBarIcon className={`w-12 h-12 mx-auto ${
               isDarkMode ? 'text-gray-600' : 'text-gray-300'
             }`} />
           </div>
-          <p className="text-base font-medium">No genre data available</p>
-          <p className="text-sm mt-2">Add anime to your list to see your favorite genres!</p>
+          <p className="text-sm font-medium">No genre data available</p>
+          <p className="text-xs mt-1">Add anime to your list to see your favorite genres!</p>
         </div>
       </div>
     )
@@ -193,18 +199,18 @@ export default function GenreStatsSection() {
   const topGenre = genres[0]
 
   return (
-    <div className={`backdrop-blur-xl rounded-2xl shadow-2xl p-6 border gamer-card-hover scan-lines ${
+    <div className={`backdrop-blur-xl rounded-2xl p-6 h-96 flex flex-col gamer-card-hover transition-all duration-300 hover:bg-opacity-60 container-integrated ${
       isDarkMode 
-        ? 'bg-gray-800/90 border-gray-700/30' 
-        : 'bg-white/90 border-white/20'
+        ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20 hover:shadow-gray-900/30' 
+        : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5 hover:shadow-gray-900/10'
     }`}>
       <h2 className={`text-lg font-semibold mb-6 ${
         isDarkMode ? 'text-gray-100' : 'text-gray-900'
       }`}>Favorite Genres</h2>
 
-      <div className="space-y-6">
+      <div className="space-y-4 flex-1 flex flex-col min-h-0">
         {/* Chart Container */}
-        <div className="w-full h-80">
+        <div className="w-full flex-1">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -235,7 +241,11 @@ export default function GenreStatsSection() {
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200/20">
+        <div className={`grid grid-cols-3 gap-3 pt-3 flex-shrink-0 ${
+          isDarkMode 
+            ? 'border-t border-gray-600/20 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.05)]' 
+            : 'border-t border-gray-300/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]'
+        }`}>
           <div className="text-center">
             <div className={`text-lg font-bold ${
               isDarkMode ? 'text-blue-400' : 'text-blue-600'

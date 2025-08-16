@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { HeartIcon as HeartSolid, PlusIcon, XMarkIcon } from '@heroicons/react/24/solid'
+import { useState, useEffect } from 'react'
+import { HeartIcon as HeartSolid, PlusIcon } from '@heroicons/react/24/solid'
 import { HeartIcon as HeartOutline, EyeIcon } from '@heroicons/react/24/outline'
-import AnimeDetailsModal from './AnimeDetailsModal'
 import { useDarkMode } from '@/src/hooks/useDarkMode'
+import EpisodeManagementModal from './EpisodeManagementModal'
+import RemoveFavoriteModal from './RemoveFavoriteModal'
 
 export interface Anime {
   id: string
@@ -28,6 +29,7 @@ export interface EnhancedAnimeCardProps {
   onWatchlistToggle?: () => void
   onRemove?: () => void
   variant?: 'browse' | 'watchlist'
+  isFavoritesTab?: boolean
 }
 
 export default function EnhancedAnimeCard({
@@ -42,46 +44,30 @@ export default function EnhancedAnimeCard({
   onWatchlistToggle,
   onRemove,
   variant = 'browse',
+  isFavoritesTab = false,
 }: EnhancedAnimeCardProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const [showModal, setShowModal] = useState(false)
   const [statusValue, setStatusValue] = useState(status || 'plan_to_watch')
   const [progressValue, setProgressValue] = useState(progress)
+  const [showEpisodeModal, setShowEpisodeModal] = useState(false)
+  const [showRemoveModal, setShowRemoveModal] = useState(false)
   const { isDarkMode, mounted } = useDarkMode()
 
-  const handleStatusSubmit = () => {
-    // Auto-adjust progress based on status
-    let newProgress = progressValue;
-    if (statusValue === 'completed' && anime.episodes) {
-      newProgress = anime.episodes;
-      setProgressValue(anime.episodes);
-    } else if (statusValue === 'plan_to_watch') {
-      newProgress = 0;
-      setProgressValue(0);
-    }
-    
-    onStatusChange?.(statusValue)
-    if (newProgress !== progressValue) {
-      onProgressChange?.(newProgress)
-    }
+  const handleStatusChange = (newStatus: string) => {
+    setStatusValue(newStatus);
+    onStatusChange?.(newStatus);
   }
 
-  const handleProgressSubmit = () => {
-    // Auto-adjust status based on progress
-    let newStatus = statusValue;
-    if (progressValue === anime.episodes && anime.episodes && statusValue === 'watching') {
-      newStatus = 'completed';
-      setStatusValue('completed');
-    } else if (progressValue > 0 && statusValue === 'plan_to_watch') {
-      newStatus = 'watching';
-      setStatusValue('watching');
-    }
-    
-    onProgressChange?.(progressValue)
-    if (newStatus !== statusValue) {
-      onStatusChange?.(newStatus)
-    }
+  const handleProgressChange = (newProgress: number) => {
+    setProgressValue(newProgress);
+    onProgressChange?.(newProgress);
   }
+
+  // Sync component state with props when they change
+  useEffect(() => {
+    setStatusValue(status || 'plan_to_watch');
+    setProgressValue(progress);
+  }, [status, progress])
 
   if (!mounted) {
     return (
@@ -100,14 +86,22 @@ export default function EnhancedAnimeCard({
   return (
     <>
       <div 
-        className={`group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 ease-out card-hover border cursor-pointer backdrop-blur-sm ${
+        className={`group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 ease-out card-hover border backdrop-blur-sm ${
+          variant === 'watchlist' ? 'cursor-pointer' : ''
+        } ${
           isDarkMode
             ? 'bg-slate-800/80 border-slate-700/40'
             : 'bg-white/80 border-gray-200/40'
         }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={() => setShowModal(true)}
+        onClick={variant === 'watchlist' ? () => {
+          if (isFavoritesTab) {
+            setShowRemoveModal(true);
+          } else {
+            setShowEpisodeModal(true);
+          }
+        } : undefined}
       >
         {/* Anime Image */}
         <div className="relative aspect-[3/4] overflow-hidden">
@@ -139,60 +133,60 @@ export default function EnhancedAnimeCard({
           )}
           
           {/* Action Buttons Overlay */}
-          <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}>
-            <div className="flex items-center space-x-3">
-              {/* Favorite Button */}
-              <button
-                onClick={onFavoriteToggle}
-                className="p-3 bg-white/20 backdrop-blur-md rounded-full border border-white/30 hover:bg-white/30 hover:scale-110 transition-all duration-300 group/btn"
-              >
-                {isFavorite ? (
-                  <HeartSolid className="w-5 h-5 text-red-500 group-hover/btn:scale-110 transition-transform duration-300" />
-                ) : (
-                  <HeartOutline className="w-5 h-5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
-                )}
-              </button>
-              
-              {/* Remove Button for Watchlist Mode - Right of Favorite */}
-              {variant === 'watchlist' && onRemove && (
+          {/* Browse mode - Show favorite and watchlist buttons */}
+          {variant === 'browse' && (
+            <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
+              isHovered ? 'opacity-100' : 'opacity-0'
+            }`}>
+              <div className="flex items-center space-x-3">
+                {/* Favorite Button */}
                 <button
-                  onClick={onRemove}
-                  className="p-3 bg-red-500/80 backdrop-blur-md rounded-full border border-red-400/30 hover:bg-red-600/90 hover:scale-110 transition-all duration-300 group/btn"
-                  title="Remove from watchlist"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFavoriteToggle?.();
+                  }}
+                  className="p-3 bg-white/20 backdrop-blur-md rounded-full border border-white/30 hover:bg-white/30 hover:scale-110 transition-all duration-300 group/btn"
                 >
-                  <XMarkIcon className="w-5 h-5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
-                </button>
-              )}
-              
-              {/* Watchlist Button (only for browse mode) */}
-              {variant === 'browse' && onWatchlistToggle && (
-                <button
-                  onClick={onWatchlistToggle}
-                  className={`p-3 backdrop-blur-md rounded-full border hover:scale-110 transition-all duration-300 group/btn ${
-                    isInWatchlist
-                      ? 'bg-green-500/80 border-green-400/30 hover:bg-green-600/90'
-                      : 'bg-white/20 border-white/30 hover:bg-white/30'
-                  }`}
-                >
-                  {isInWatchlist ? (
-                    <EyeIcon className="w-5 h-5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
+                  {isFavorite ? (
+                    <HeartSolid className="w-5 h-5 text-red-500 group-hover/btn:scale-110 transition-transform duration-300" />
                   ) : (
-                    <PlusIcon className="w-5 h-5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
+                    <HeartOutline className="w-5 h-5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
                   )}
                 </button>
-              )}
+                
+                {/* Watchlist Button */}
+                {onWatchlistToggle && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onWatchlistToggle();
+                    }}
+                    className={`p-3 backdrop-blur-md rounded-full border hover:scale-110 transition-all duration-300 group/btn ${
+                      isInWatchlist
+                        ? 'bg-green-500/80 border-green-400/30 hover:bg-green-600/90'
+                        : 'bg-white/20 border-white/30 hover:bg-white/30'
+                    }`}
+                  >
+                    {isInWatchlist ? (
+                      <EyeIcon className="w-5 h-5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
+                    ) : (
+                      <PlusIcon className="w-5 h-5 text-white group-hover/btn:scale-110 transition-transform duration-300" />
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+          
+
         </div>
 
         {/* Content */}
         <div className="p-3 space-y-2">
-          <h3 className={`font-bold line-clamp-2 text-sm leading-tight group-hover:text-blue-600 transition-colors duration-300 ${
+          <h3 className={`font-bold line-clamp-2 text-sm leading-tight transition-colors duration-300 ${
             isDarkMode 
-              ? 'text-gray-100 group-hover:text-blue-400' 
-              : 'text-gray-900 group-hover:text-blue-600'
+              ? 'text-gray-100' 
+              : 'text-gray-900'
           }`}>
             {anime.title}
           </h3>
@@ -204,80 +198,74 @@ export default function EnhancedAnimeCard({
             </p>
           </div>
 
-          {/* Quick Actions for Watchlist Items */}
+          {/* Minimal Watchlist Info */}
           {variant === 'watchlist' && (
-            <div className="space-y-2 pt-2 border-t border-gray-200/50">
-              {/* Status Dropdown */}
-              <select
-                value={statusValue}
-                onChange={(e) => setStatusValue(e.target.value)}
-                onBlur={handleStatusSubmit}
-                className={`w-full p-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ${
-                  isDarkMode
-                    ? 'bg-gray-700 border-gray-600 text-gray-100'
-                    : 'bg-gray-50 border-gray-200 text-gray-900'
-                }`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <option value="plan_to_watch">Plan to Watch</option>
-                <option value="watching">Watching</option>
-                <option value="completed">Completed</option>
-                <option value="on_hold">On Hold</option>
-                <option value="dropped">Dropped</option>
-              </select>
-
-              {/* Progress Input */}
-              <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="number"
-                  min="0"
-                  max={anime.episodes || 999}
-                  value={progressValue}
-                  onChange={(e) => setProgressValue(Number(e.target.value))}
-                  onBlur={handleProgressSubmit}
-                  className={`flex-1 p-1 text-xs border rounded focus:ring-1 focus:ring-blue-500 transition-all duration-300 ${
-                    isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                />
-                <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  / {anime.episodes || '?'}
+            <div className="pt-2 border-t border-gray-200/50">
+              <div className="flex items-center justify-between text-xs">
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  statusValue === 'completed' 
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    : statusValue === 'watching'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                    : statusValue === 'on_hold'
+                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    : statusValue === 'dropped'
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                    : 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
+                }`}>
+                  {statusValue === 'plan_to_watch' ? 'Plan to Watch' :
+                   statusValue === 'watching' ? 'Watching' :
+                   statusValue === 'completed' ? 'Completed' :
+                   statusValue === 'on_hold' ? 'On Hold' :
+                   statusValue === 'dropped' ? 'Dropped' : statusValue}
                 </span>
-                <button
-                  onClick={handleProgressSubmit}
-                  className={`flex items-center space-x-1 px-2 py-1 text-xs rounded-md transition-all duration-300 btn-animate ${
-                    isDarkMode
-                      ? 'text-blue-400 hover:bg-blue-900/30'
-                      : 'text-blue-600 hover:bg-blue-50'
-                  }`}
-                >
-                  <span>Update</span>
-                </button>
+                <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {progressValue}/{anime.episodes || '?'}
+                </span>
               </div>
-
-              {/* Progress Bar */}
-              <div className={`w-full rounded-full h-2 overflow-hidden ${
-                isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-              }`}>
-                <div 
-                  className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-              </div>
+              
+              {/* Simple Progress Bar */}
+              {progressValue > 0 && (
+                <div className={`w-full rounded-full h-1.5 mt-2 overflow-hidden ${
+                  isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                }`}>
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal */}
-      {showModal && (
-        <AnimeDetailsModal
+      {/* Episode Management Modal */}
+      {variant === 'watchlist' && showEpisodeModal && !isFavoritesTab && (
+        <EpisodeManagementModal
           anime={anime}
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          isFavorite={isFavorite}
-          isInWatchlist={isInWatchlist}
+          status={statusValue}
+          progress={progressValue}
+          isOpen={showEpisodeModal}
+          onClose={() => setShowEpisodeModal(false)}
+          onStatusChange={handleStatusChange}
+          onProgressChange={handleProgressChange}
           onFavoriteToggle={onFavoriteToggle}
-          onWatchlistToggle={onWatchlistToggle}
+          onRemove={onRemove}
+          isFavorite={isFavorite}
+        />
+      )}
+
+      {/* Remove from Favorites Modal */}
+      {variant === 'watchlist' && isFavoritesTab && showRemoveModal && (
+        <RemoveFavoriteModal
+          anime={anime}
+          isOpen={showRemoveModal}
+          onClose={() => setShowRemoveModal(false)}
+          onConfirm={() => {
+            onFavoriteToggle?.();
+            setShowRemoveModal(false);
+          }}
         />
       )}
     </>

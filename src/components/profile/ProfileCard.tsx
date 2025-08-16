@@ -110,7 +110,11 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
 
   if (!mounted) {
     return (
-      <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-2xl flex flex-col h-96 animate-pulse">
+      <div className={`backdrop-blur-xl rounded-2xl p-6 flex flex-col h-96 animate-pulse container-integrated ${
+        isDarkMode 
+          ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20' 
+          : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5'
+      }`}>
         <div className="h-4 bg-gray-200 rounded mb-4"></div>
         <div className="h-4 bg-gray-200 rounded mb-4"></div>
         <div className="flex-1 bg-gray-100 rounded"></div>
@@ -121,15 +125,17 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
   // Dark mode state is now managed in useEffect above
 
   return (
-    <div className={`${
+    <div className={`backdrop-blur-xl rounded-2xl p-6 flex flex-col transition-all duration-300 hover:bg-opacity-60 container-integrated ${
       isDarkMode 
-        ? 'bg-gray-800/90 border-gray-700/30' 
-        : 'bg-white/90 border-white/20'
-    } backdrop-blur-xl rounded-2xl p-6 shadow-2xl flex flex-col transition-all duration-300 ${
-      isEditingBio ? 'h-[500px]' : 'h-96'
-    }`}>
-      {/* Action buttons */}
-      <div className="flex justify-end space-x-2 mb-6">
+        ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20 hover:shadow-gray-900/30' 
+        : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5 hover:shadow-gray-900/10'
+    } ${isEditingBio ? 'h-[500px]' : 'h-96'}`}>
+      {/* Header with title and action buttons */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className={`text-lg font-semibold ${
+          isDarkMode ? 'text-gray-100' : 'text-gray-900'
+        }`}>Profile</h2>
+        <div className="flex space-x-2">
         <button
           onClick={() => setIsEditing(true)}
           className={`p-2 transition-colors rounded-full backdrop-blur-sm ${
@@ -151,6 +157,7 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
             <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
           </svg>
         </button>
+        </div>
       </div>
 
       {/* Profile content - using flex-1 and proper overflow handling */}

@@ -188,11 +188,15 @@ export default function RecentActivitySection() {
 
   if (!mounted) {
     return (
-      <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/20 animate-pulse">
+      <div className={`backdrop-blur-xl rounded-2xl p-6 h-96 flex flex-col shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5 animate-pulse ${
+        isDarkMode ? 'bg-gray-800/40' : 'bg-white/30'
+      }`}>
         <div className="h-6 bg-gray-200 rounded mb-6 w-1/2"></div>
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1">
           {[1, 2, 3].map((item) => (
-            <div key={item} className="h-16 bg-gray-100 rounded-xl"></div>
+            <div key={item} className={`h-16 rounded-xl ${
+              isDarkMode ? 'bg-gray-700/20' : 'bg-gray-100/20'
+            }`}></div>
           ))}
         </div>
       </div>
@@ -201,18 +205,18 @@ export default function RecentActivitySection() {
 
   if (loading) {
     return (
-      <div className={`backdrop-blur-xl rounded-2xl shadow-2xl p-6 border ${
+      <div className={`backdrop-blur-xl rounded-2xl p-6 h-96 flex flex-col transition-all duration-300 ${
         isDarkMode 
-          ? 'bg-gray-800/90 border-gray-700/30' 
-          : 'bg-white/90 border-white/20'
+          ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20' 
+          : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5'
       } animate-pulse`}>
         <div className={`h-6 rounded mb-6 w-1/2 ${
           isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
         }`}></div>
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1">
           {[1, 2, 3].map((item) => (
             <div key={item} className={`h-16 rounded-xl ${
-              isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+              isDarkMode ? 'bg-gray-700/20' : 'bg-gray-100/20'
             }`}></div>
           ))}
         </div>
@@ -221,10 +225,10 @@ export default function RecentActivitySection() {
   }
 
   return (
-    <div className={`backdrop-blur-xl rounded-2xl shadow-2xl p-6 border ${
+    <div className={`backdrop-blur-xl rounded-2xl p-6 h-96 flex flex-col transition-all duration-300 hover:bg-opacity-60 container-integrated ${
       isDarkMode 
-        ? 'bg-gray-800/90 border-gray-700/30' 
-        : 'bg-white/90 border-white/20'
+        ? 'bg-gray-800/40 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)] shadow-gray-900/20 hover:shadow-gray-900/30' 
+        : 'bg-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] shadow-gray-900/5 hover:shadow-gray-900/10'
     }`}>
       <div className="flex items-center justify-between mb-6">
         <h2 className={`text-lg font-semibold ${
@@ -243,28 +247,29 @@ export default function RecentActivitySection() {
         )}
       </div>
       
-      {activities.length === 0 ? (
-        <div className={`text-center py-8 ${
-          isDarkMode ? 'text-gray-400' : 'text-gray-500'
-        }`}>
-          <div className="mb-3">
-            <PencilIcon className={`w-12 h-12 mx-auto ${
-              isDarkMode ? 'text-gray-600' : 'text-gray-300'
-            }`} />
+      <div className="flex-1 flex flex-col min-h-0">
+        {activities.length === 0 ? (
+          <div className={`text-center py-8 flex-1 flex flex-col justify-center ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            <div className="mb-3">
+              <PencilIcon className={`w-12 h-12 mx-auto ${
+                isDarkMode ? 'text-gray-600' : 'text-gray-300'
+              }`} />
+            </div>
+            <p className="text-sm font-medium">No recent activity</p>
+            <p className="text-xs mt-1">Start tracking anime to see your activity here!</p>
           </div>
-          <p className="text-sm font-medium">No recent activity</p>
-          <p className="text-xs mt-1">Start tracking anime to see your activity here!</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
+        ) : (
+          <div className="space-y-3 flex-1 overflow-y-auto">
           {activities.map((activity) => {
             const description = getActivityDescription(activity)
             return (
-              <div key={activity.id} className={`backdrop-blur-sm rounded-xl p-4 transition-all duration-200 hover:scale-[1.02] border ${
-                isDarkMode
-                  ? 'bg-gradient-to-r from-gray-700/60 to-gray-600/60 border-gray-600/30 hover:from-gray-600/70 hover:to-gray-500/70'
-                  : 'bg-gradient-to-r from-gray-100/60 to-gray-200/60 border-gray-200/30 hover:from-gray-200/70 hover:to-gray-300/70'
-              }`}>
+                          <div key={activity.id} className={`backdrop-blur-sm rounded-xl p-4 transition-all duration-200 hover:scale-[1.02] ${
+              isDarkMode
+                ? 'bg-gradient-to-r from-gray-700/30 to-gray-600/30 hover:from-gray-600/50 hover:to-gray-500/50 shadow-[inset_0_1px_0_0_rgba(148,163,184,0.05)] hover:shadow-[inset_0_1px_0_0_rgba(148,163,184,0.1)]'
+                : 'bg-gradient-to-r from-gray-200/20 to-gray-300/20 hover:from-gray-300/40 hover:to-gray-400/40 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25)]'
+            }`}>
                 <div className="flex items-start space-x-3">
                   {/* Activity Icon */}
                   <div className="flex-shrink-0 mt-0.5 p-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
@@ -298,7 +303,7 @@ export default function RecentActivitySection() {
                       <img
                         src={activity.anime.imageUrl}
                         alt={activity.anime.title}
-                        className="w-8 h-10 object-cover rounded border border-gray-300/30"
+                        className="w-8 h-10 object-cover rounded shadow-sm ring-1 ring-gray-300/20"
                       />
                     </div>
                   )}
@@ -306,8 +311,9 @@ export default function RecentActivitySection() {
               </div>
             )
           })}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   )
 } 

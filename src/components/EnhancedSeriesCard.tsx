@@ -40,6 +40,8 @@ interface EnhancedSeriesCardProps {
   onWatchlistToggle: () => void;
   isFavorite: boolean;
   isInWatchlist: boolean;
+  hideStats?: boolean;
+  isMobile?: boolean;
 }
 
 export default function EnhancedSeriesCard({ 
@@ -48,7 +50,9 @@ export default function EnhancedSeriesCard({
   onFavoriteToggle, 
   onWatchlistToggle, 
   isFavorite, 
-  isInWatchlist 
+  isInWatchlist,
+  hideStats = false,
+  isMobile = false
 }: EnhancedSeriesCardProps) {
   const { isDarkMode } = useDarkMode();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -76,15 +80,34 @@ export default function EnhancedSeriesCard({
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger card click if clicking on buttons
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    
+    // Don't trigger card click if there was significant drag movement
+    const scrollContainer = (e.target as HTMLElement).closest('[data-drag-distance]');
+    const dragDistance = scrollContainer?.getAttribute('data-drag-distance');
+    if (dragDistance && parseFloat(dragDistance) > 10) {
+      return;
+    }
+    
+    onOpenDetails?.(series.id);
+  };
+
   return (
-    <div className={`h-full flex flex-col rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 ${
-      isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'
-    }`}>
+    <div 
+      className={`h-full flex flex-col rounded-lg overflow-hidden shadow-lg card-clickable ${
+        isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'
+      }`}
+      onClick={handleCardClick}
+    >
       {/* Main Image and Info */}
       <div className="relative flex-shrink-0">
         <img 
           src={series.imageUrl || mainAnime?.imageUrl || '/placeholder-anime.jpg'} 
-          alt={series.title}
+          alt={series.titleEnglish || series.title}
           className="w-full h-64 object-cover"
         />
         {series.averageScore && (
@@ -92,54 +115,39 @@ export default function EnhancedSeriesCard({
             ⭐ {series.averageScore.toFixed(1)}
           </div>
         )}
-        {hasMultipleEntries && (
-          <div className="absolute top-2 right-2 bg-purple-600/90 text-white px-2 py-1 rounded-full text-sm font-medium">
-            {series.animeCount} entries
-          </div>
-        )}
-        <div className={`absolute bottom-2 right-2 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(series.status)}`}>
-          {series.status}
-        </div>
       </div>
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-1">
         {/* Title Section - Fixed height */}
         <div className="mb-3">
-          <h3 className={`font-bold text-lg mb-2 line-clamp-2 min-h-[3.5rem] ${
+          <h3 className={`font-bold mb-2 line-clamp-2 min-h-[3.5rem] ${
+            isMobile ? 'text-sm' : 'text-lg'
+          } ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            {series.title}
+            {series.titleEnglish || series.title}
           </h3>
-          
-          {series.titleEnglish && series.titleEnglish !== series.title && (
-            <p className={`text-sm opacity-75 line-clamp-1 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              {series.titleEnglish}
-            </p>
-          )}
         </div>
 
         {/* Series Stats */}
-        <div className={`flex flex-wrap gap-2 mb-3 text-sm ${
-          isDarkMode ? 'text-gray-300' : 'text-gray-600'
-        }`}>
-          {series.totalEpisodes && (
-            <span>📺 {series.totalEpisodes} eps</span>
-          )}
-          {series.startYear && (
-            <span>📅 {series.startYear}{series.endYear && series.endYear !== series.startYear ? `-${series.endYear}` : ''}</span>
-          )}
-        </div>
-
-        {/* Description */}
-        {series.description && (
-          <p className={`text-sm mb-4 line-clamp-3 ${
+        {!hideStats && (
+          <div className={`flex flex-wrap gap-3 mb-4 text-sm ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
-            {series.description}
-          </p>
+            {series.totalEpisodes && (
+              <span className="flex items-center gap-1">
+                <span className="text-purple-400">📺</span>
+                {series.totalEpisodes} episodes
+              </span>
+            )}
+            {series.animeCount > 1 && (
+              <span className="flex items-center gap-1">
+                <span className="text-blue-400">🎬</span>
+                {series.animeCount} seasons
+              </span>
+            )}
+          </div>
         )}
 
         {/* Flexible spacer to push buttons to bottom */}
@@ -147,17 +155,6 @@ export default function EnhancedSeriesCard({
 
         {/* Action Buttons - Always at bottom */}
         <div className="flex gap-2 mt-auto">
-          <button 
-            onClick={() => onOpenDetails?.(series.id)} 
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
-              isDarkMode 
-                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                : 'bg-purple-600 hover:bg-purple-700 text-white'
-            }`}
-          >
-            View Details
-          </button>
-          
           {/* Heart (Favorite) Icon */}
           <button 
             onClick={onFavoriteToggle}
@@ -204,7 +201,7 @@ export default function EnhancedSeriesCard({
             )}
           </button>
 
-          {hasMultipleEntries && (
+          {hasMultipleEntries && !isMobile && (
             <button 
               onClick={() => setIsExpanded(!isExpanded)}
               className={`p-2 rounded-lg transition-all duration-200 ${

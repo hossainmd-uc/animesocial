@@ -44,7 +44,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen gamer-gradient transition-all duration-500">
+    <div className="gamer-gradient transition-colors duration-300 relative h-screen overflow-y-auto">
       {/* Enhanced Floating Particles Background */}
       <div className="floating-particles">
         <div className="particle"></div>
@@ -61,14 +61,18 @@ export default async function DashboardPage() {
         <div className="particle"></div>
       </div>
       
-      {/* Header */}
+      {/* Stylized Vertical Dashboard Text */}
+      <div className="dashboard-text">
+        DASHBOARD
+      </div>
+      
       <Header />
       
-      {/* Main Content */}
-      <div className="content-wrapper section-padding py-10">
-        {/* Top Row - Profile and Stats */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 mb-8">
-          {/* Profile Section - Larger on desktop */}
+      {/* Main Content Section */}
+      <section className="container mx-auto px-6 relative z-10 py-10">
+        {/* Top Row - Profile, Stats, and Recent Activity */}
+        <div className="grid grid-cols-1 xl:grid-cols-6 gap-4 mb-8">
+          {/* Profile Section */}
           <div className="xl:col-span-2">
             <ProfileCard user={user} profile={profile} />
           </div>
@@ -77,10 +81,15 @@ export default async function DashboardPage() {
           <div className="xl:col-span-2">
             <AnimeStatsSection />
           </div>
+
+          {/* Recent Activity Section */}
+          <div className="xl:col-span-2">
+            <RecentActivitySection />
+          </div>
         </div>
 
-        {/* Bottom Row - Content Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Bottom Row - Favorites and Genres */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Favorites Section */}
           <div className="lg:col-span-1">
             <FavoritesSection />
@@ -90,13 +99,8 @@ export default async function DashboardPage() {
           <div className="lg:col-span-1">
             <GenreStatsSection />
           </div>
-            
-          {/* Recent Activity Section */}
-          <div className="lg:col-span-1">
-            <RecentActivitySection />
-          </div>
         </div>
-      </div>
+      </section>
     </div>
   )
 } 

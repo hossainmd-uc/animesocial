@@ -44,6 +44,100 @@ interface SeriesDetailsModalProps {
   onClose: () => void;
 }
 
+// Helper functions
+const getPlatformLogo = (platformName: string, size: 'sm' | 'md' = 'md') => {
+  const name = platformName.toLowerCase();
+  const sizeClasses = size === 'sm' ? 'w-6 h-6 text-xs' : 'w-8 h-8 text-xs';
+  const iconSize = size === 'sm' ? 'text-sm' : 'text-lg';
+  
+  if (name.includes('crunchyroll')) {
+    return (
+      <div className={`${sizeClasses} bg-orange-500 rounded-lg flex items-center justify-center text-white font-bold`}>
+        CR
+      </div>
+    );
+  }
+  
+  if (name.includes('funimation')) {
+    return (
+      <div className={`${sizeClasses} bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold`}>
+        FN
+      </div>
+    );
+  }
+  
+  if (name.includes('netflix')) {
+    return (
+      <div className={`${sizeClasses} bg-red-600 rounded-lg flex items-center justify-center text-white font-bold`}>
+        NF
+      </div>
+    );
+  }
+  
+  if (name.includes('hulu')) {
+    return (
+      <div className={`${sizeClasses} bg-green-500 rounded-lg flex items-center justify-center text-white font-bold`}>
+        HU
+      </div>
+    );
+  }
+  
+  if (name.includes('amazon') || name.includes('prime')) {
+    return (
+      <div className={`${sizeClasses} bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold`}>
+        PV
+      </div>
+    );
+  }
+  
+  if (name.includes('disney')) {
+    return (
+      <div className={`${sizeClasses} bg-blue-700 rounded-lg flex items-center justify-center text-white font-bold`}>
+        D+
+      </div>
+    );
+  }
+  
+  if (name.includes('youtube')) {
+    return (
+      <div className={`${sizeClasses} bg-red-500 rounded-lg flex items-center justify-center text-white font-bold`}>
+        YT
+      </div>
+    );
+  }
+  
+  if (name.includes('bilibili')) {
+    return (
+      <div className={`${sizeClasses} bg-pink-500 rounded-lg flex items-center justify-center text-white font-bold`}>
+        BB
+      </div>
+    );
+  }
+  
+  if (name.includes('aniplus')) {
+    return (
+      <div className={`${sizeClasses} bg-blue-800 rounded-lg flex items-center justify-center text-white font-bold`}>
+        A+
+      </div>
+    );
+  }
+  
+  // Default streaming icon
+  return (
+    <div className={`${sizeClasses} bg-gray-500 rounded-lg flex items-center justify-center text-white ${iconSize}`}>
+      📺
+    </div>
+  );
+};
+
+const cleanPlatformName = (name: string) => {
+  // Remove common suffixes and clean up the name
+  return name
+    .replace(/\s*\(.*?\)/g, '') // Remove parentheses content
+    .replace(/\s*-.*$/, '') // Remove everything after dash
+    .trim();
+};
+
 export default function SeriesDetailsModal({ seriesId, isOpen, onClose }: SeriesDetailsModalProps) {
   const { isDarkMode } = useDarkMode();
   const [series, setSeries] = useState<SeriesDetails | null>(null);
@@ -113,6 +207,8 @@ export default function SeriesDetailsModal({ seriesId, isOpen, onClose }: Series
       default: return 'text-gray-500';
     }
   };
+
+
 
   if (!isOpen) return null;
 
@@ -213,16 +309,60 @@ export default function SeriesDetailsModal({ seriesId, isOpen, onClose }: Series
                     </div>
                   </div>
 
-                  {/* Description */}
-                  {series.description && (
-                    <p className={`leading-relaxed ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      {series.description}
-                    </p>
-                  )}
+                                {/* Description */}
+              {series.description && (
+                <p className={`leading-relaxed ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  {series.description}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Watch Now Section - Aggregate streaming from all animes */}
+          {(() => {
+            const allStreaming = series.animes.flatMap(anime => anime.streaming || []);
+            const uniqueStreaming = allStreaming.filter((stream, index, arr) => 
+              arr.findIndex(s => s.name === stream.name && s.url === stream.url) === index
+            );
+            
+            if (uniqueStreaming.length === 0) return null;
+            
+            return (
+              <div className="mb-8">
+                <h3 className={`text-xl font-bold mb-4 ${
+                  isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                }`}>
+                  🎬 Watch Now
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {uniqueStreaming.map((stream, index) => (
+                    <a
+                      key={index}
+                      href={stream.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`group flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 hover:scale-[1.02] ${
+                        isDarkMode 
+                          ? 'border-slate-600 bg-slate-700/50 hover:bg-slate-600/70 hover:border-slate-500' 
+                          : 'border-gray-200 bg-gray-50 hover:bg-white hover:border-gray-300 hover:shadow-md'
+                      }`}
+                    >
+                      <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
+                        {getPlatformLogo(stream.name)}
+                      </div>
+                      <span className={`font-medium text-sm truncate ${
+                        isDarkMode ? 'text-gray-200 group-hover:text-white' : 'text-gray-800 group-hover:text-gray-900'
+                      }`}>
+                        {cleanPlatformName(stream.name)}
+                      </span>
+                    </a>
+                  ))}
                 </div>
               </div>
+            );
+          })()}
 
               {/* Anime Entries */}
               <div>
@@ -503,27 +643,36 @@ function AnimeEntryCard({ anime, isDarkMode, expanded, onToggleExpand }: AnimeEn
             )}
 
             {/* Streaming & Links */}
-            <div className="flex gap-4">
+            <div className="space-y-4">
               {/* Streaming */}
               {anime.streaming && anime.streaming.length > 0 && (
-                <div className="flex-1">
-                  <h6 className={`font-semibold mb-2 ${
+                <div>
+                  <h6 className={`font-semibold mb-3 ${
                     isDarkMode ? 'text-gray-200' : 'text-gray-800'
                   }`}>
                     Streaming
                   </h6>
-                  <div className="space-y-1">
+                  <div className="grid grid-cols-2 gap-2">
                     {anime.streaming.map((stream, index) => (
                       <a
                         key={index}
                         href={stream.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`block text-sm hover:underline ${
-                          isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                        className={`group flex items-center gap-2 p-2 rounded-lg border transition-all duration-200 hover:scale-[1.02] ${
+                          isDarkMode 
+                            ? 'border-slate-500 bg-slate-600/30 hover:bg-slate-500/50 hover:border-slate-400' 
+                            : 'border-gray-300 bg-gray-100/50 hover:bg-gray-200 hover:border-gray-400'
                         }`}
                       >
-                        📺 {stream.name}
+                        <div className="flex-shrink-0">
+                          {getPlatformLogo(stream.name, 'sm')}
+                        </div>
+                        <span className={`font-medium text-xs truncate ${
+                          isDarkMode ? 'text-gray-200 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900'
+                        }`}>
+                          {cleanPlatformName(stream.name)}
+                        </span>
                       </a>
                     ))}
                   </div>
@@ -532,21 +681,23 @@ function AnimeEntryCard({ anime, isDarkMode, expanded, onToggleExpand }: AnimeEn
 
               {/* External Links */}
               {anime.externalLinks && anime.externalLinks.length > 0 && (
-                <div className="flex-1">
-                  <h6 className={`font-semibold mb-2 ${
+                <div>
+                  <h6 className={`font-semibold mb-3 ${
                     isDarkMode ? 'text-gray-200' : 'text-gray-800'
                   }`}>
-                    Links
+                    External Links
                   </h6>
-                  <div className="space-y-1">
+                  <div className="flex flex-wrap gap-2">
                     {anime.externalLinks.map((link, index) => (
                       <a
                         key={index}
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`block text-sm hover:underline ${
-                          isDarkMode ? 'text-purple-400' : 'text-purple-600'
+                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-[1.02] ${
+                          isDarkMode 
+                            ? 'bg-purple-600/20 text-purple-300 hover:bg-purple-600/30 border border-purple-500/30' 
+                            : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
                         }`}
                       >
                         🔗 {link.name}

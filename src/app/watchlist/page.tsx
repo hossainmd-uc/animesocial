@@ -212,25 +212,67 @@ export default function WatchlistPage() {
 
   if (loading || !mounted) {
     return (
-      <div className="min-h-screen smooth-gradient transition-all duration-500">
-        <Header />
-        <div className="content-wrapper section-padding py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Loading your collection...</p>
-            </div>
-          </div>
+      <div className="gamer-gradient transition-colors duration-300 relative">
+        {/* Enhanced Floating Particles Background */}
+        <div className="floating-particles">
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle particle-hex"></div>
+          <div className="particle particle-hex"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle particle-hex"></div>
+          <div className="particle"></div>
         </div>
+        
+        {/* Stylized Vertical Collection Text */}
+        <div className="dashboard-text">
+          COLLECTION
+        </div>
+        
+        <Header />
+        
+        <section className="container mx-auto px-6 relative z-10 min-h-[400px] flex items-center justify-center">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Loading your collection...</p>
+          </div>
+        </section>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen smooth-gradient transition-all duration-500">
+      <div className="gamer-gradient transition-colors duration-300 relative">
+        {/* Enhanced Floating Particles Background */}
+        <div className="floating-particles">
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle particle-hex"></div>
+          <div className="particle particle-hex"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle particle-hex"></div>
+          <div className="particle"></div>
+        </div>
+        
+        {/* Stylized Vertical Collection Text */}
+        <div className="dashboard-text">
+          COLLECTION
+        </div>
+        
         <Header />
-        <div className="content-wrapper section-padding py-8">
+        
+        <section className="container mx-auto px-6 relative z-10 min-h-[400px] flex items-center justify-center">
           <div className="text-center py-20">
             <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
               isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
@@ -244,16 +286,38 @@ export default function WatchlistPage() {
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>Please sign in to view your watchlist and favorites.</p>
           </div>
-        </div>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen smooth-gradient transition-all duration-500">
+    <div className="gamer-gradient transition-colors duration-300 relative h-screen overflow-y-auto">
+      {/* Enhanced Floating Particles Background */}
+      <div className="floating-particles">
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle particle-hex"></div>
+        <div className="particle particle-hex"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle particle-hex"></div>
+        <div className="particle"></div>
+      </div>
+      
+      {/* Stylized Vertical Collection Text */}
+      <div className="dashboard-text">
+        COLLECTION
+      </div>
+      
       <Header />
       
-      <div className="content-wrapper section-padding py-8">
+      {/* Main Content Section */}
+      <section className="container mx-auto px-6 relative z-10 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className={`text-4xl font-bold mb-3 ${
@@ -265,57 +329,68 @@ export default function WatchlistPage() {
         </div>
 
         {/* Tabs */}
-        <div className={`flex space-x-1 backdrop-blur-lg p-1.5 rounded-2xl mb-8 w-fit border ${
+        <div className={`relative backdrop-blur-lg rounded-xl md:rounded-2xl mb-6 md:mb-8 w-fit border overflow-hidden ${
           isDarkMode 
-            ? 'bg-gray-800/80 border-gray-700' 
-            : 'bg-white/80 border-gray-200'
+            ? 'bg-gray-800/20 border-gray-700/10' 
+            : 'bg-white/30 border-gray-200/10'
         }`}>
-          <button
-            onClick={() => setActiveTab('watchlist')}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
-              activeTab === 'watchlist'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105'
-                : isDarkMode
-                  ? 'text-gray-400 hover:text-gray-100 hover:bg-gray-700 hover:scale-105'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 hover:scale-105'
+          {/* Sliding Background Indicator */}
+          <div 
+            className={`absolute inset-y-0 bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 ease-out ${
+              activeTab === 'watchlist' ? 'left-0' : 'left-1/2'
             }`}
-          >
-            <div className="flex items-center space-x-2">
-              <span>Watchlist</span>
-              <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
-                activeTab === 'watchlist' 
-                  ? 'bg-white/20 text-white' 
+            style={{ width: '50%' }}
+          />
+          
+          {/* Tab Buttons */}
+          <div className="relative z-10 flex">
+            <button
+              onClick={() => setActiveTab('watchlist')}
+              className={`flex-1 px-4 md:px-6 py-2.5 md:py-3 font-medium transition-all duration-300 ${
+                activeTab === 'watchlist'
+                  ? 'text-white'
                   : isDarkMode
-                    ? 'bg-gray-600 text-gray-300'
-                    : 'bg-gray-200 text-gray-600'
-              }`}>
-                {watchlistCount}
-              </span>
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('favorites')}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
-              activeTab === 'favorites'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105'
-                : isDarkMode
-                  ? 'text-gray-400 hover:text-gray-100 hover:bg-gray-700 hover:scale-105'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 hover:scale-105'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <span>Favorites</span>
-              <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
-                activeTab === 'favorites' 
-                  ? 'bg-white/20 text-white' 
+                    ? 'text-gray-400 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <div className="flex items-center justify-center space-x-1.5 md:space-x-2">
+                <span className="text-sm md:text-base">Watchlist</span>
+                <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs font-bold ${
+                  activeTab === 'watchlist' 
+                    ? 'bg-white/20 text-white' 
+                    : isDarkMode
+                      ? 'bg-gray-600/50 text-gray-300'
+                      : 'bg-gray-200/50 text-gray-600'
+                }`}>
+                  {watchlistCount}
+                </span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('favorites')}
+              className={`flex-1 px-4 md:px-6 py-2.5 md:py-3 font-medium transition-all duration-300 ${
+                activeTab === 'favorites'
+                  ? 'text-white'
                   : isDarkMode
-                    ? 'bg-gray-600 text-gray-300'
-                    : 'bg-gray-200 text-gray-600'
-              }`}>
-                {favoritesCount}
-              </span>
-            </div>
-          </button>
+                    ? 'text-gray-400 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <div className="flex items-center justify-center space-x-1.5 md:space-x-2">
+                <span className="text-sm md:text-base">Favorites</span>
+                <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs font-bold ${
+                  activeTab === 'favorites' 
+                    ? 'bg-white/20 text-white' 
+                    : isDarkMode
+                      ? 'bg-gray-600/50 text-gray-300'
+                      : 'bg-gray-200/50 text-gray-600'
+                }`}>
+                  {favoritesCount}
+                </span>
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -385,6 +460,7 @@ export default function WatchlistPage() {
                 onFavoriteToggle={() => handleFavoriteToggle(item.id, item.isFavorite)}
                 onRemove={() => handleRemoveAnime(item.id)}
                 variant="watchlist"
+                isFavoritesTab={activeTab === 'favorites'}
               />
             ))}
           </div>
@@ -409,7 +485,7 @@ export default function WatchlistPage() {
             </p>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 } 

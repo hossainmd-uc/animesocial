@@ -43,6 +43,22 @@ export default function SeriesCard({ series, onOpenDetails }: SeriesCardProps) {
   const mainAnime = series.animes.find(a => a.seriesType === 'main') || series.animes[0];
   const hasMultipleEntries = series.animeCount > 1;
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger card click if clicking on buttons
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    
+    // Don't trigger card click if there was significant drag movement
+    const scrollContainer = (e.target as HTMLElement).closest('[data-drag-distance]');
+    const dragDistance = scrollContainer?.getAttribute('data-drag-distance');
+    if (dragDistance && parseFloat(dragDistance) > 10) {
+      return;
+    }
+    
+    onOpenDetails?.(series.id);
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'TV': return '📺';
@@ -63,9 +79,12 @@ export default function SeriesCard({ series, onOpenDetails }: SeriesCardProps) {
   };
 
   return (
-    <div className={`rounded-2xl overflow-hidden shadow-xl transition-all duration-300 gamer-card-hover scan-lines backdrop-blur-xl ${
-      isDarkMode ? 'bg-gray-800/90 border border-gray-700/30' : 'bg-white/90 border border-gray-200/30'
-    }`}>
+    <div 
+      className={`rounded-2xl overflow-hidden shadow-xl card-clickable scan-lines backdrop-blur-xl ${
+        isDarkMode ? 'bg-gray-800/90 border border-gray-700/30' : 'bg-white/90 border border-gray-200/30'
+      }`}
+      onClick={handleCardClick}
+    >
       {/* Main Image and Info */}
       <div className="relative">
         <img
@@ -139,17 +158,6 @@ export default function SeriesCard({ series, onOpenDetails }: SeriesCardProps) {
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          <button 
-            onClick={() => onOpenDetails?.(series.id)} 
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
-              isDarkMode 
-                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                : 'bg-purple-600 hover:bg-purple-700 text-white'
-            }`}
-          >
-            View Details
-          </button>
-          
           {/* Heart (Add to Favorites) Icon */}
           <button 
             className={`p-2 rounded-lg transition-all duration-200 ${

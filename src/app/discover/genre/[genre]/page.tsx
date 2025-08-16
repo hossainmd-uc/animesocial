@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTheme } from 'next-themes';
+import Header from '@/src/components/layout/Header';
 import EnhancedSeriesCard from '@/src/components/EnhancedSeriesCard';
 import SeriesDetailsModal from '@/src/components/SeriesDetailsModal';
+import { useDarkMode } from '@/src/hooks/useDarkMode';
 import { createClient } from '@/src/lib/supabase/client';
 
 interface AnimeEntry {
@@ -50,9 +51,7 @@ interface GenrePageProps {
 
 const GenrePage = ({ params }: GenrePageProps) => {
   const router = useRouter();
-  const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const isDarkMode = mounted ? theme === 'dark' : false; // Default to light mode during SSR
+  const { isDarkMode, mounted } = useDarkMode();
   
   const [series, setSeries] = useState<Series[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,10 +62,23 @@ const GenrePage = ({ params }: GenrePageProps) => {
   const [userAnimeList, setUserAnimeList] = useState<UserAnime[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+  const itemsPerPage = 24;
 
-  // Handle hydration
+  // Mobile detection
   useEffect(() => {
-    setMounted(true);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640); // 640px is Tailwind's sm breakpoint
+    };
+    
+    // Initial check
+    setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Handle async params
@@ -350,52 +362,66 @@ const GenrePage = ({ params }: GenrePageProps) => {
     }
   });
 
+  const getPaginatedData = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sortedSeries.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = () => {
+    return Math.ceil(sortedSeries.length / itemsPerPage);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Reset to first page when sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortBy]);
+
+  if (!mounted) {
+    return null;
+  }
+
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
-      isDarkMode 
-        ? 'bg-gray-900 text-white' 
-        : 'bg-gradient-to-br from-purple-50 via-blue-50 to-teal-50 text-gray-900'
-    }`}>
-      {/* Enhanced floating background particles */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+    <div className={`gamer-gradient transition-colors duration-300 relative h-screen overflow-y-auto`}>
+      {/* Enhanced Floating Particles Background */}
+      <div className="floating-particles">
         <div className="particle"></div>
         <div className="particle"></div>
         <div className="particle"></div>
         <div className="particle"></div>
         <div className="particle"></div>
         <div className="particle"></div>
+        <div className="particle particle-hex"></div>
+        <div className="particle particle-hex"></div>
         <div className="particle"></div>
         <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
+        <div className="particle particle-hex"></div>
         <div className="particle"></div>
       </div>
+      
+      <Header />
 
-      <div className="relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="content-wrapper relative z-10">
+        <div className="section-padding">
           {/* Header */}
-          <div className={`backdrop-blur-xl rounded-3xl p-8 mb-12 bg-gradient-to-r ${genreInfo.bgGradient} border border-opacity-20 ${
+          <div className={`backdrop-blur-xl rounded-lg p-6 mb-8 bg-gradient-to-r ${genreInfo.bgGradient} border border-opacity-20 ${
             isDarkMode ? 'border-gray-700' : 'border-gray-300'
           }`}>
             <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-6">
-                <div className={`text-6xl bg-gradient-to-r ${genreInfo.gradient} bg-clip-text text-transparent`}>
+              <div className="flex items-center gap-4">
+                <div className={`text-4xl bg-gradient-to-r ${genreInfo.gradient} bg-clip-text text-transparent`}>
                   {genreInfo.icon}
                 </div>
                 <div>
-                  <h1 className={`text-4xl font-bold bg-gradient-to-r ${genreInfo.gradient} bg-clip-text text-transparent mb-2`}>
+                  <h1 className={`text-2xl font-bold bg-gradient-to-r ${genreInfo.gradient} bg-clip-text text-transparent mb-1`}>
                     {genreInfo.title}
                   </h1>
-                  <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} max-w-2xl`}>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} max-w-2xl`}>
                     {genreInfo.description}
                   </p>
                 </div>
@@ -403,7 +429,7 @@ const GenrePage = ({ params }: GenrePageProps) => {
               
               <button
                 onClick={() => router.back()}
-                className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 gamer-card-hover ${
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 gamer-card-hover ${
                   isDarkMode 
                     ? 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/50 border border-gray-700/30' 
                     : 'bg-white/60 text-gray-700 hover:bg-gray-100/50 border border-gray-200/30'
@@ -439,7 +465,7 @@ const GenrePage = ({ params }: GenrePageProps) => {
             </div>
             
             <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {series.length} series found
+              {sortedSeries.length} series found {getTotalPages() > 1 && `(Page ${currentPage} of ${getTotalPages()})`}
             </div>
           </div>
 
@@ -477,7 +503,7 @@ const GenrePage = ({ params }: GenrePageProps) => {
           )}
 
           {/* Empty State */}
-          {!loading && !error && genreName && series.length === 0 && (
+          {!loading && !error && genreName && sortedSeries.length === 0 && (
             <div className="flex justify-center py-24">
               <div className={`text-center backdrop-blur-xl rounded-3xl p-10 max-w-md gamer-card-hover ${
                 isDarkMode ? 'bg-gray-800/30 border border-gray-700/30' : 'bg-white/60 border border-gray-200/30'
@@ -494,18 +520,46 @@ const GenrePage = ({ params }: GenrePageProps) => {
 
           {/* Series Grid */}
           {!loading && !error && genreName && sortedSeries.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-8">
-              {sortedSeries.map((series) => (
-                <EnhancedSeriesCard
-                  key={series.id}
-                  series={series}
-                  onOpenDetails={() => handleOpenDetails(series.id)}
-                  onFavoriteToggle={() => toggleFavorite(series.id)}
-                  onWatchlistToggle={() => addToWatchlist(series.id)}
-                  isFavorite={isFavorite(series.id)}
-                  isInWatchlist={isInWatchlist(series.id)}
-                />
-              ))}
+            <div>
+              <div className="grid gap-6 mb-8 grid-cols-2 sm:[grid-template-columns:repeat(auto-fill,minmax(200px,1fr))]">
+                {getPaginatedData().map((series, index) => (
+                  <div key={series.id} className="gamer-card-hover will-change-auto animate-in fade-in duration-500" style={{
+                    animationDelay: `${index * 50}ms`
+                  }}>
+                    <EnhancedSeriesCard
+                      series={series}
+                      onOpenDetails={() => handleOpenDetails(series.id)}
+                      onFavoriteToggle={() => toggleFavorite(series.id)}
+                      onWatchlistToggle={() => addToWatchlist(series.id)}
+                      isFavorite={isFavorite(series.id)}
+                      isInWatchlist={isInWatchlist(series.id)}
+                      hideStats={isMobile}
+                      isMobile={isMobile}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {getTotalPages() > 1 && (
+                <div className="flex justify-center items-center gap-3 mt-12 animate-in fade-in duration-500">
+                  {Array.from({ length: getTotalPages() }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`w-11 h-11 rounded-lg font-semibold transition-all duration-300 backdrop-blur-xl ${
+                        page === currentPage
+                          ? 'bg-purple-600 text-white shadow-lg hover:bg-purple-700 transform hover:scale-105'
+                          : isDarkMode
+                            ? 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/80 border border-slate-600/30'
+                            : 'bg-white/50 text-gray-700 hover:bg-white/70 border border-slate-300/30'
+                      } hover:shadow-xl`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           

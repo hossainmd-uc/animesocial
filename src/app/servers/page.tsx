@@ -101,6 +101,28 @@ export default function ServersPage() {
   if (loading || !mounted) {
     return (
       <div className="min-h-screen smooth-gradient transition-all duration-500">
+        {/* Enhanced Floating Particles Background */}
+        <div className="floating-particles">
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle particle-hex"></div>
+          <div className="particle particle-hex"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle particle-hex"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+        </div>
+        
         <Header />
         <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
           <div className="flex flex-col items-center space-y-4">
@@ -114,6 +136,28 @@ export default function ServersPage() {
 
   return (
     <div className="min-h-screen smooth-gradient transition-all duration-500">
+      {/* Enhanced Floating Particles Background */}
+      <div className="floating-particles">
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle particle-hex"></div>
+        <div className="particle particle-hex"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle particle-hex"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+      </div>
+      
       <Header />
       
       <div className="flex h-[calc(100vh-80px)] gap-4 px-4">
