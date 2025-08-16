@@ -544,7 +544,7 @@ export async function replyToMessage(
   channelId: string,
   parentId: string,
   content: string
-): Promise<any> {
+): Promise<ServerMessage> {
   const response = await fetch(`/api/channels/${channelId}/messages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -552,51 +552,51 @@ export async function replyToMessage(
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json() as { message?: string };
     throw new Error(error.message || 'Failed to reply to message');
   }
 
-  return response.json();
+  return response.json() as Promise<ServerMessage>;
 }
 
 // Like a message
-export async function likeMessage(messageId: string): Promise<any> {
+export async function likeMessage(messageId: string): Promise<{ success: boolean; likeCount: number }> {
   const response = await fetch(`/api/messages/${messageId}/like`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' }
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json() as { message?: string };
     throw new Error(error.message || 'Failed to like message');
   }
 
-  return response.json();
+  return response.json() as Promise<{ success: boolean; likeCount: number }>;
 }
 
 // Unlike a message
-export async function unlikeMessage(messageId: string): Promise<any> {
+export async function unlikeMessage(messageId: string): Promise<{ success: boolean; likeCount: number }> {
   const response = await fetch(`/api/messages/${messageId}/like`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' }
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json() as { message?: string };
     throw new Error(error.message || 'Failed to unlike message');
   }
 
-  return response.json();
+  return response.json() as Promise<{ success: boolean; likeCount: number }>;
 }
 
 // Get message replies
-export async function getMessageReplies(messageId: string): Promise<any[]> {
+export async function getMessageReplies(messageId: string): Promise<ServerMessage[]> {
   const response = await fetch(`/api/messages/${messageId}/replies`);
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json() as { message?: string };
     throw new Error(error.message || 'Failed to fetch message replies');
   }
 
-  return response.json();
+  return response.json() as Promise<ServerMessage[]>;
 } 

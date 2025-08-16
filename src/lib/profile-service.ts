@@ -1,5 +1,6 @@
 import { prisma } from './prisma'
 import { createClient } from './supabase/server'
+import { Profile } from '@/src/types/profile'
 
 // ===== PRISMA APPROACH (Django-like!) =====
 export class ProfileService {
@@ -19,7 +20,7 @@ export class ProfileService {
   }
 
   // Ensure profile exists for user - creates if needed
-  static async ensureProfile(userId: string, userEmail?: string, userMetadata?: any) {
+  static async ensureProfile(userId: string, userEmail?: string, userMetadata?: Record<string, unknown>): Promise<Profile> {
     try {
       const existingProfile = await Promise.race([
         prisma.profile.findUnique({
@@ -29,38 +30,40 @@ export class ProfileService {
       ]);
 
       if (existingProfile) {
-        return existingProfile
+        return existingProfile as Profile
       }
 
       // Create profile with data from signup
-      const username = userMetadata?.username || userEmail?.split('@')[0] || `user_${userId.slice(0, 8)}`
+      const username = (userMetadata?.username as string) || userEmail?.split('@')[0] || `user_${userId.slice(0, 8)}`
       
-      return await Promise.race([
+      const newProfile = await Promise.race([
         prisma.profile.create({
           data: {
             id: userId,
             username,
-            displayName: userMetadata?.display_name || null,
-            avatarUrl: userMetadata?.avatar_url || null,
+            displayName: (userMetadata?.display_name as string) || null,
+            avatarUrl: (userMetadata?.avatar_url as string) || null,
           }
         }),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 5000))
-      ]);
+      ]) as Profile;
+      
+      return newProfile;
     } catch (error) {
       console.error('ProfileService.ensureProfile: Database error:', error);
       
       // Return a fallback profile when database is unreachable
       return {
         id: userId,
-        username: userMetadata?.username || userEmail?.split('@')[0] || `user_${userId.slice(0, 8)}`,
-        displayName: userMetadata?.display_name || null,
+        username: (userMetadata?.username as string) || userEmail?.split('@')[0] || `user_${userId.slice(0, 8)}`,
+        displayName: (userMetadata?.display_name as string) || null,
         bio: null,
         favoriteAnime: null,
-        avatarUrl: userMetadata?.avatar_url || null,
+        avatarUrl: (userMetadata?.avatar_url as string) || null,
         status: null,
         createdAt: new Date(),
         updatedAt: new Date()
-      };
+      } as Profile;
     }
   }
 

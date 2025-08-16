@@ -117,7 +117,7 @@ function extractRelatedAnimeIds(relations: any[]): number[] {
     }
   }
   
-  return [...new Set(malIds)]; // Remove duplicates
+  return Array.from(new Set(malIds)); // Remove duplicates
 }
 
 /**
@@ -245,8 +245,10 @@ function determineOrderFromYear(year: number | null): number {
   return year - 1960; // Arbitrary base year to get reasonable numbers
 }
 
-export default {
+const RelationshipBasedSeries = {
   detectSeriesForAnime,
   extractRelatedAnimeIds,
   isSeriesRelationship
-}; 
+};
+
+export default RelationshipBasedSeries; 

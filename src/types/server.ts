@@ -243,7 +243,7 @@ export interface ServerActivity {
   server_id: string;
   channel_id?: string;
   user_id: string;
-  data?: any;
+  data?: Record<string, unknown>;
   timestamp: string;
 }
 

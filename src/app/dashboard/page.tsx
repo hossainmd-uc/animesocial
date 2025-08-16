@@ -7,6 +7,7 @@ import RecentActivitySection from '@/src/components/dashboard/RecentActivitySect
 import AnimeStatsSection from '@/src/components/dashboard/AnimeStatsSection'
 import GenreStatsSection from '@/src/components/dashboard/GenreStatsSection'
 import { ProfileService } from '@/src/lib/profile-service'
+import { Profile } from '@/src/types/profile'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -20,7 +21,7 @@ export default async function DashboardPage() {
   }
 
   // Ensure profile exists and get it with error handling
-  let profile: any;
+  let profile: Profile;
   try {
     profile = await ProfileService.ensureProfile(
       user.id,

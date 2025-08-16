@@ -215,10 +215,12 @@ export async function testSeriesNameDetection() {
   }
 }
 
-export default {
+const SeriesNameDetection = {
   determineSeriesName,
   cleanTitleForSeries,
   findMainAnime,
   findEarliestAnime,
   findCleanestTitle
-}; 
+};
+
+export default SeriesNameDetection; 

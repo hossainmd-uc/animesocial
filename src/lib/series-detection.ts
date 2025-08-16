@@ -278,10 +278,12 @@ function cleanSeriesTitle(title: string): string {
   return cleaned.trim();
 }
 
-export default {
+const SeriesDetection = {
   detectSeries,
   normalizeTitle,
   extractBaseTitle,
   determineSeriesType,
   determineSeriesOrder
-}; 
+};
+
+export default SeriesDetection; 

@@ -11,7 +11,7 @@ export class StorageService {
       const filePath = `avatars/${fileName}`
 
       // Upload file to Supabase storage
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from(this.BUCKET_NAME)
         .upload(filePath, file, {
           cacheControl: '3600',
