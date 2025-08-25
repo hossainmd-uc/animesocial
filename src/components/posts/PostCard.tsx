@@ -9,6 +9,7 @@ import { useUser } from '../../hooks/useUser';
 import { deletePost } from '../../lib/server-service';
 import EditPostModal from './EditPostModal';
 import Avatar from '../ui/Avatar';
+import Link from 'next/link';
 
 interface Props {
   post: ServerPost;
@@ -112,17 +113,27 @@ export default function PostCard({ post, onLike, onComment, onPostClick, onPostU
       >
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center space-x-3">
-            <Avatar
-              src={post.author?.avatar_url}
-              username={post.author?.username ?? 'Unknown'}
-              size="sm"
-            />
+            <Link 
+              href={`/discover/${post.author?.username ?? 'unknown'}`} 
+              className="flex-shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Avatar
+                src={post.author?.avatar_url}
+                username={post.author?.username ?? 'Unknown'}
+                size="sm"
+              />
+            </Link>
             <div className="flex items-center space-x-2">
-              <span className={`font-medium ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
+              <Link 
+                href={`/discover/${post.author?.username ?? 'unknown'}`}
+                className={`font-medium hover:underline transition-colors ${
+                  isDarkMode ? 'text-gray-300 hover:text-gray-100' : 'text-gray-700 hover:text-gray-900'
+                }`}
+                onClick={(e) => e.stopPropagation()}
+              >
                 {post.author?.username ?? 'Unknown'}
-              </span>
+              </Link>
               <span className="text-xs">•</span>
               <span className={`${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -193,11 +204,17 @@ export default function PostCard({ post, onLike, onComment, onPostClick, onPostU
         </p>
         
         {post.image_url && (
-          <div className="rounded-lg overflow-hidden">
+          <div className="mt-3">
             <img 
               src={post.image_url} 
               alt={post.title||'post image'} 
-              className="w-full object-cover max-h-80 group-hover:scale-[1.02] transition-transform duration-300" 
+              className="max-w-full object-contain group-hover:scale-[1.02] transition-transform duration-300 rounded-lg" 
+              style={{ 
+                maxHeight: '400px',
+                width: 'auto',
+                height: 'auto'
+              }}
+              loading="lazy"
             />
           </div>
         )}

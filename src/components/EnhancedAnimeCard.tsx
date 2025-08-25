@@ -193,8 +193,7 @@ export default function EnhancedAnimeCard({
           
           <div className="flex items-center justify-between text-xs">
             <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {anime.episodes && `${anime.episodes} episodes`}
-              {anime.year && ` • ${anime.year}`}
+              {anime.year}
             </p>
           </div>
 

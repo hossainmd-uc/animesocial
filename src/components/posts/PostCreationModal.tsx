@@ -3,6 +3,8 @@ import { Dialog } from '@headlessui/react';
 import { createPost } from '../../lib/server-service';
 import type { ServerPost } from '../../types/server';
 import { useDarkMode } from '../../hooks/useDarkMode';
+import ImageUpload from '../common/ImageUpload';
+import { useUser } from '../../hooks/useUser';
 
 interface Props {
   serverId: string;
@@ -14,39 +16,45 @@ interface Props {
 export default function PostCreationModal({ serverId, channelId, onCreated, onClose }: Props) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { isDarkMode, mounted } = useDarkMode();
+  const { user } = useUser();
 
   if (!mounted) {
     return null;
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
   const handleSubmit = async () => {
-    if (!content.trim()) return;
+    if (!content.trim()) {
+      setError('Content is required');
+      return;
+    }
+    
     setLoading(true);
-    let image_url: string | undefined;
-    // TODO: upload to Supabase storage if needed; for now skip
-    const newPost = await createPost({
-      server_id: serverId,
-      channel_id: channelId,
-      title: title.trim() || undefined,
-      content: content.trim(),
-      image_url,
-    });
-    setLoading(false);
-    if (newPost) {
-      onCreated(newPost);
-      onClose();
+    setError(null);
+    
+    try {
+      const newPost = await createPost({
+        server_id: serverId,
+        channel_id: channelId,
+        title: title.trim() || undefined,
+        content: content.trim(),
+        image_url: imageUrl || undefined,
+      });
+      
+      if (newPost) {
+        onCreated(newPost);
+        onClose();
+      } else {
+        setError('Failed to create post');
+      }
+    } catch (err) {
+      console.error('Error creating post:', err);
+      setError('Failed to create post');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,6 +70,13 @@ export default function PostCreationModal({ serverId, channelId, onCreated, onCl
           isDarkMode ? 'text-white' : 'text-gray-900'
         }`}>Create Post</Dialog.Title>
         <div className="space-y-4">
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+          
           <input
             type="text"
             placeholder="Title (optional)"
@@ -84,19 +99,26 @@ export default function PostCreationModal({ serverId, channelId, onCreated, onCl
                 : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
             } px-3 py-2 text-sm outline-none focus:border-primary resize-y`}
           />
-          <div>
-            <label className={`block text-sm font-medium mb-1 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>Add Photo</label>
-            <input type="file" accept="image/*" onChange={handleImageChange} />
-            {previewUrl && <img src={previewUrl} alt="preview" className="mt-2 max-h-40 rounded-lg" />}
-          </div>
+          <ImageUpload
+            onImageUploaded={(url) => setImageUrl(url)}
+            onError={(error) => setError(error)}
+            currentImageUrl={imageUrl || undefined}
+            uploadOptions={{
+              bucket: 'post',
+              folder: user?.id || 'temp',
+              maxSizeBytes: 5 * 1024 * 1024, // 5MB for post images
+            }}
+            label="Add Photo"
+            disabled={loading}
+          />
         </div>
         <div className="flex justify-end gap-3 pt-2">
           <button 
             onClick={onClose} 
-            className={`px-3 py-1 rounded text-sm ${
-              isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-gray-100'
+            className={`px-3 py-1 rounded text-sm transition-colors ${
+              isDarkMode 
+                ? 'text-slate-300 hover:bg-slate-700 hover:text-white' 
+                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
             }`}
           >
             Cancel
@@ -104,7 +126,11 @@ export default function PostCreationModal({ serverId, channelId, onCreated, onCl
           <button 
             onClick={handleSubmit} 
             disabled={loading} 
-            className="px-4 py-1 rounded bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
+            className={`px-4 py-1 rounded transition-colors disabled:opacity-50 ${
+              isDarkMode
+                ? 'bg-primary hover:bg-primary/90 text-white'
+                : 'bg-primary hover:bg-primary/90 text-black'
+            }`}
           >
             {loading ? 'Posting…' : 'Post'}
           </button>

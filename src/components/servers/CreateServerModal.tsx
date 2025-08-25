@@ -5,6 +5,8 @@ import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import { createServer } from '../../lib/server-service';
 import type { Server, CreateServerRequest } from '../../types/server';
 import { useDarkMode } from '../../hooks/useDarkMode';
+import ImageUpload from '../common/ImageUpload';
+import { useUser } from '../../hooks/useUser';
 
 interface CreateServerModalProps {
   onClose: () => void;
@@ -20,6 +22,7 @@ export function CreateServerModal({ onClose, onServerCreated }: CreateServerModa
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isDarkMode, mounted } = useDarkMode();
+  const { user } = useUser();
 
   if (!mounted) {
     return null;
@@ -100,17 +103,22 @@ export function CreateServerModal({ onClose, onServerCreated }: CreateServerModa
             </div>
           )}
 
-          {/* Server Icon Upload (Future Enhancement) */}
+          {/* Server Icon Upload */}
           <div className="flex justify-center">
-            <div className={`w-20 h-20 ${
-              isDarkMode ? 'bg-slate-700/50' : 'bg-gray-100'
-            } rounded-2xl flex items-center justify-center border-2 border-dashed ${
-              isDarkMode ? 'border-slate-600' : 'border-gray-300'
-            } transition-colors duration-200 hover:border-primary cursor-pointer group`}>
-              <PhotoIcon className={`w-8 h-8 ${
-                isDarkMode ? 'text-slate-500 group-hover:text-primary' : 'text-gray-400 group-hover:text-primary'
-              } transition-colors duration-200`} />
-            </div>
+            <ImageUpload
+              onImageUploaded={(url) => setFormData(prev => ({ ...prev, icon_url: url }))}
+              onError={(error) => setError(error)}
+              currentImageUrl={formData.icon_url}
+              uploadOptions={{
+                bucket: 'server',
+                folder: user?.id || 'temp',
+                maxSizeBytes: 2 * 1024 * 1024, // 2MB for server icons
+              }}
+              label="Server Icon"
+              className="text-center"
+              previewClassName="mx-auto"
+              disabled={submitting}
+            />
           </div>
 
           {/* Server Name */}
@@ -253,11 +261,17 @@ export function CreateServerModal({ onClose, onServerCreated }: CreateServerModa
             <button
               type="submit"
               disabled={!formData.name.trim() || submitting}
-              className="flex-1 px-4 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2"
+              className={`flex-1 px-4 py-3 rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 ${
+                isDarkMode
+                  ? 'bg-primary text-white'
+                  : 'bg-primary text-black'
+              }`}
             >
               {submitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <div className={`animate-spin rounded-full h-4 w-4 border-b-2 ${
+                    isDarkMode ? 'border-white' : 'border-black'
+                  }`}></div>
                   <span>Creating...</span>
                 </>
               ) : (

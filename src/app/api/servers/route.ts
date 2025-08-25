@@ -34,9 +34,20 @@ export async function GET() {
         orderBy: { createdAt: 'desc' }
       }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 15000))
-    ]) as any[];
+    ]) as Array<{
+      id: string;
+      name: string;
+      description: string | null;
+      iconUrl: string | null;
+      inviteCode: string | null;
+      isPublic: boolean;
+      ownerId: string;
+      createdAt: Date;
+      updatedAt: Date;
+      _count: { members: number };
+    }>;
 
-    const formattedServers = servers.map((server: any) => ({
+    const formattedServers = servers.map((server) => ({
       id: server.id,
       name: server.name,
       description: server.description,
@@ -84,7 +95,17 @@ export async function POST(request: NextRequest) {
         },
       }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 15000))
-    ]) as any;
+    ]) as {
+      id: string;
+      name: string;
+      description: string | null;
+      iconUrl: string | null;
+      isPublic: boolean;
+      ownerId: string;
+      inviteCode: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+    };
 
     // Create default channels
     const defaultChannels = [

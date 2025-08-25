@@ -255,11 +255,17 @@ function ReplyItem({ reply, maxDepth, onReplyAdded, onReplyUpdated, onReplyDelet
                   <button
                     type="submit"
                     disabled={!replyContent.trim() || submitting}
-                    className="px-2 py-1 text-xs bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-1"
+                    className={`px-2 py-1 text-xs rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-1 ${
+                      isDarkMode
+                        ? 'bg-primary text-white'
+                        : 'bg-primary text-black'
+                    }`}
                   >
                     {submitting ? (
                       <>
-                        <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-white"></div>
+                        <div className={`animate-spin rounded-full h-2 w-2 border-b-2 ${
+                          isDarkMode ? 'border-white' : 'border-black'
+                        }`}></div>
                         <span>Posting...</span>
                       </>
                     ) : (

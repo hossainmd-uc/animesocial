@@ -160,11 +160,17 @@ export function JoinServerModal({ onClose, onServerJoined }: JoinServerModalProp
                 <button
                   type="submit"
                   disabled={!inviteCode.trim() || submitting}
-                  className="w-full px-4 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2"
+                  className={`w-full px-4 py-3 rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 ${
+                    isDarkMode
+                      ? 'bg-primary text-white'
+                      : 'bg-primary text-black'
+                  }`}
                 >
                   {submitting ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <div className={`animate-spin rounded-full h-4 w-4 border-b-2 ${
+                        isDarkMode ? 'border-white' : 'border-black'
+                      }`}></div>
                       <span>Joining...</span>
                     </>
                   ) : (

@@ -6,8 +6,10 @@ import Header from '@/src/components/layout/Header';
 import { getServer, updateServer, regenerateInviteCode } from '@/src/lib/server-service';
 import type { ServerWithDetails } from '@/src/types/server';
 import { useDarkMode } from '@/src/hooks/useDarkMode';
+import { useUser } from '@/src/hooks/useUser';
 import { PhotoIcon, KeyIcon, ShieldCheckIcon, UserGroupIcon, ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { createClient } from '@/src/lib/supabase/client';
+import ImageUpload from '@/src/components/common/ImageUpload';
 
 export default function ServerSettingsPage() {
   const params = useParams();
@@ -20,12 +22,14 @@ export default function ServerSettingsPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const { isDarkMode, mounted } = useDarkMode();
+  const { user } = useUser();
 
   // Form state
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     is_public: true,
+    icon_url: '',
   });
 
   useEffect(() => {
@@ -57,6 +61,7 @@ export default function ServerSettingsPage() {
         name: serverData.name,
         description: serverData.description || '',
         is_public: serverData.is_public,
+        icon_url: serverData.icon_url || '',
       });
     } catch (error) {
       console.error('Error loading server:', error);
@@ -79,6 +84,7 @@ export default function ServerSettingsPage() {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         is_public: formData.is_public,
+        icon_url: formData.icon_url || undefined,
       });
 
       if (updatedServer) {
@@ -100,6 +106,16 @@ export default function ServerSettingsPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (error) setError(null);
     if (success) setSuccess(null);
+  };
+
+  const handleImageUploaded = (url: string) => {
+    setFormData(prev => ({ ...prev, icon_url: url }));
+    if (error) setError(null);
+    if (success) setSuccess(null);
+  };
+
+  const handleImageError = (errorMessage: string) => {
+    setError(errorMessage);
   };
 
   const generateNewInviteCode = async () => {
@@ -245,37 +261,23 @@ export default function ServerSettingsPage() {
                     }`}>
                       Server Icon
                     </label>
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-20 h-20 ${
-                        isDarkMode ? 'bg-slate-700/50' : 'bg-gray-100'
-                      } rounded-2xl flex items-center justify-center border-2 border-dashed ${
-                        isDarkMode ? 'border-slate-600' : 'border-gray-300'
-                      } transition-colors duration-200 hover:border-primary cursor-pointer group`}>
-                        {server?.icon_url ? (
-                          <img
-                            src={server.icon_url}
-                            alt={server.name}
-                            className="w-full h-full object-cover rounded-2xl"
-                          />
-                        ) : (
-                          <PhotoIcon className={`w-8 h-8 ${
-                            isDarkMode ? 'text-slate-500 group-hover:text-primary' : 'text-gray-400 group-hover:text-primary'
-                          } transition-colors duration-200`} />
-                        )}
-                      </div>
-                      <div>
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-2`}>
-                          Upload an image for your server
-                        </p>
-                        <button
-                          type="button"
-                          className={`text-sm ${
-                            isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'
-                          } transition-colors duration-200`}
-                        >
-                          Choose Image
-                        </button>
-                      </div>
+                    <div className="flex flex-col gap-12">
+                      <ImageUpload
+                        onImageUploaded={handleImageUploaded}
+                        onError={handleImageError}
+                        currentImageUrl={formData.icon_url}
+                        uploadOptions={{
+                          bucket: 'server',
+                          folder: user?.id || 'temp',
+                          maxSizeBytes: 2 * 1024 * 1024, // 2MB for server icons
+                        }}
+                        label=""
+                        previewClassName="w-20 h-20 rounded-2xl"
+                        disabled={saving}
+                      />
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Recommended: Square image, at least 256x256 pixels, max 2MB
+                      </p>
                     </div>
                   </div>
 

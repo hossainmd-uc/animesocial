@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { HeartIcon, ChatBubbleLeftIcon, EllipsisHorizontalIcon, ArrowUpIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { HeartIcon, ChatBubbleLeftIcon, EllipsisHorizontalIcon, ArrowUpIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon, UserIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { useUser } from '../../hooks/useUser';
 import Avatar from '../ui/Avatar';
+import Link from 'next/link';
 
 interface ChatMessageProps {
   message: {
@@ -176,16 +177,21 @@ export default function ChatMessage({
 
       {/* Message Header */}
       <div className="flex items-center gap-2 mb-1">
-        <Avatar
-          src={message.author.avatar_url}
-          username={message.author.username}
-          size="sm"
-        />
-        <span className={`font-medium text-base ${
-          isDarkMode ? 'text-slate-200' : 'text-gray-900'
-        }`}>
+        <Link href={`/discover/${message.author.username}`} className="flex-shrink-0">
+          <Avatar
+            src={message.author.avatar_url}
+            username={message.author.username}
+            size="sm"
+          />
+        </Link>
+        <Link 
+          href={`/discover/${message.author.username}`}
+          className={`font-medium text-base hover:underline transition-colors ${
+            isDarkMode ? 'text-slate-200 hover:text-slate-100' : 'text-gray-900 hover:text-gray-700'
+          }`}
+        >
           {message.author.username}
-        </span>
+        </Link>
         <span className={`text-xs ${
           isDarkMode ? 'text-slate-400' : 'text-gray-500'
         }`}>
@@ -282,6 +288,20 @@ export default function ChatMessage({
             <span className="text-xs font-medium">{message.reply_count || 0}</span>
           )}
         </button>
+
+        {/* View Profile Button - Only show for other users' messages */}
+        {!isOwnMessage && (
+          <Link href={`/discover/${message.author.username}`}>
+            <button
+              className={`flex items-center gap-1 px-2 py-1 rounded-md transition-colors ${
+                isDarkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-gray-100 text-gray-600'
+              }`}
+              title="View Profile"
+            >
+              <UserIcon className="w-4 h-4" />
+            </button>
+          </Link>
+        )}
 
         {/* More Actions - Only show for own messages */}
         {isOwnMessage && !isEditing && (

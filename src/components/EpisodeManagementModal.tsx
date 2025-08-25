@@ -43,52 +43,64 @@ export default function EpisodeManagementModal({
   const { isDarkMode } = useDarkMode()
   const [localStatus, setLocalStatus] = useState(status)
   const [localProgress, setLocalProgress] = useState(progress)
+  
+  // Track original values to detect changes
+  const [originalStatus, setOriginalStatus] = useState(status)
+  const [originalProgress, setOriginalProgress] = useState(progress)
 
   useEffect(() => {
     setLocalStatus(status)
     setLocalProgress(progress)
   }, [status, progress])
 
-  // Sync local state when the modal opens
+  // Sync local state and track original values when the modal opens
   useEffect(() => {
     if (isOpen) {
       setLocalStatus(status)
       setLocalProgress(progress)
+      setOriginalStatus(status)
+      setOriginalProgress(progress)
     }
   }, [isOpen, status, progress])
 
   const handleStatusChange = (newStatus: string) => {
     setLocalStatus(newStatus)
     
-    // Auto-adjust progress based on status BEFORE calling the parent handlers
-    let newProgress = localProgress;
+    // Auto-adjust progress based on status (local state only)
     if (newStatus === 'completed' && anime.episodes) {
-      newProgress = anime.episodes;
       setLocalProgress(anime.episodes);
     } else if (newStatus === 'plan_to_watch') {
-      newProgress = 0;
       setLocalProgress(0);
-    }
-    
-    // Call parent handlers with the new values
-    onStatusChange(newStatus)
-    if (newProgress !== localProgress) {
-      onProgressChange(newProgress)
     }
   }
 
   const handleProgressChange = (newProgress: number) => {
     setLocalProgress(newProgress)
-    onProgressChange(newProgress)
     
-    // Auto-complete if reached max episodes
+    // Auto-complete if reached max episodes (local state only)
     if (anime.episodes && newProgress === anime.episodes && localStatus !== 'completed') {
       setLocalStatus('completed')
-      onStatusChange('completed')
     } else if (newProgress > 0 && localStatus === 'plan_to_watch') {
       setLocalStatus('watching')
-      onStatusChange('watching')
     }
+  }
+
+  // Handle modal close with change detection
+  const handleClose = () => {
+    // Check if anything changed
+    const statusChanged = localStatus !== originalStatus
+    const progressChanged = localProgress !== originalProgress
+    
+    // Only call parent handlers if values actually changed
+    if (statusChanged) {
+      onStatusChange(localStatus)
+    }
+    if (progressChanged) {
+      onProgressChange(localProgress)
+    }
+    
+    // Close the modal
+    onClose()
   }
 
   const decrementProgress = () => {
@@ -115,7 +127,7 @@ export default function EpisodeManagementModal({
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div 
         className={`relative w-full max-w-xs rounded-2xl shadow-2xl backdrop-blur-xl border ${
@@ -270,6 +282,8 @@ export default function EpisodeManagementModal({
               />
             </div>
           </div>
+
+
 
           {/* Action Buttons */}
           <div className="flex space-x-3 pt-3 border-t border-gray-200/20">

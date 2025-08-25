@@ -12,7 +12,7 @@ export async function GET(
     const { id: serverId } = await params;
     
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: _authError } = await supabase.auth.getUser();
     
     const server = await prisma.server.findUnique({
       where: { id: serverId },

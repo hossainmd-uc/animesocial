@@ -58,7 +58,18 @@ export async function GET(
       skip: offset
     });
 
-    const formattedPosts = posts.map((post: any) => ({
+    const formattedPosts = posts.map((post: {
+      id: string;
+      serverId: string;
+      channelId: string;
+      authorId: string;
+      title: string;
+      content: string;
+      imageUrl: string | null;
+      animeId: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+    }) => ({
       id: post.id,
       server_id: post.serverId,
       channel_id: post.channelId,

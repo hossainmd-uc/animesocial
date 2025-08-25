@@ -462,50 +462,35 @@ export function subscribeToServerMessages(
   onMessage: (message: ServerMessage) => void,
   onDelete?: (id: string) => void
 ) {
+  console.log('🔔 Setting up broadcast subscription for channel:', channelId);
+  
+  // Use Broadcast instead of Postgres Changes (more reliable)
   const subscription = supabase
-    .channel(`server_messages:channel_id=eq.${channelId}`)
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'server_messages', filter: `channel_id=eq.${channelId}` },
-      async (payload) => {
-        try {
-          const response = await fetch(`/api/messages/${payload.new.id}`);
-          if (response.ok) {
-            const message = await response.json();
-            onMessage(message);
-          }
-        } catch (error) {
-          console.error('Error fetching real-time message:', error);
-        }
+    .channel(`channel_${channelId}`)
+    .on('broadcast', { event: 'new_message' }, (payload) => {
+      console.log('📥 Broadcast message received:', payload);
+      if (payload.payload && payload.payload.message) {
+        onMessage(payload.payload.message);
       }
-    )
-    .on(
-      'postgres_changes',
-      { event: 'UPDATE', schema: 'public', table: 'server_messages', filter: `channel_id=eq.${channelId}` },
-      async (payload) => {
-        try {
-          const response = await fetch(`/api/messages/${payload.new.id}`);
-          if (response.ok) {
-            const message = await response.json();
-            onMessage(message);
-          }
-        } catch (error) {
-          console.error('Error fetching updated message:', error);
-        }
+    })
+    .on('broadcast', { event: 'message_updated' }, (payload) => {
+      console.log('📝 Broadcast update received:', payload);
+      if (payload.payload && payload.payload.message) {
+        onMessage(payload.payload.message);
       }
-    )
-    .on(
-      'postgres_changes',
-      { event: 'DELETE', schema: 'public', table: 'server_messages', filter: `channel_id=eq.${channelId}` },
-      (payload) => {
-        if (onDelete) {
-          onDelete(payload.old.id as string);
-        }
+    })
+    .on('broadcast', { event: 'message_deleted' }, (payload) => {
+      console.log('🗑️ Broadcast delete received:', payload);
+      if (onDelete && payload.payload && payload.payload.messageId) {
+        onDelete(payload.payload.messageId);
       }
-    )
-    .subscribe();
+    })
+    .subscribe((status) => {
+      console.log('🔌 Broadcast subscription status:', status);
+    });
 
   return () => {
+    console.log('🧹 Cleaning up broadcast subscription');
     supabase.removeChannel(subscription);
   };
 }

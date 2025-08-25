@@ -13,11 +13,12 @@ import PostCard from '../posts/PostCard';
 import PostDetailView from '../posts/PostDetailView';
 
 interface ServerPostFeedProps {
-  server: ServerWithDetails;
-  channel: ServerChannel;
+  serverId: string;
+  channelId: string;
+  channelName: string;
 }
 
-export function ServerPostFeed({ server, channel }: ServerPostFeedProps) {
+export function ServerPostFeed({ serverId, channelId, channelName }: ServerPostFeedProps) {
   const [posts, setPosts] = useState<ServerPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -28,7 +29,7 @@ export function ServerPostFeed({ server, channel }: ServerPostFeedProps) {
     loadPosts();
 
     // Subscribe to real-time posts
-    const unsubscribe = subscribeToServerPosts(channel.id, (newPost) => {
+    const unsubscribe = subscribeToServerPosts(channelId, (newPost) => {
       setPosts(prev => {
         // Check if post already exists (to avoid duplicates)
         const exists = prev.some(post => post.id === newPost.id);
@@ -42,12 +43,12 @@ export function ServerPostFeed({ server, channel }: ServerPostFeedProps) {
     return () => {
       unsubscribe();
     };
-  }, [channel.id]);
+  }, [channelId]);
 
   const loadPosts = async () => {
     try {
       setLoading(true);
-      const channelPosts = await getChannelPosts(channel.id);
+      const channelPosts = await getChannelPosts(channelId);
       setPosts(channelPosts);
     } catch (error) {
       console.error('Error loading posts:', error);
@@ -108,25 +109,19 @@ export function ServerPostFeed({ server, channel }: ServerPostFeedProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-svh overflow-hidden">
       {/* Channel Header */}
       <div className="flex items-center justify-between p-4 border-b border-border/30 dark:border-slate-700/30 bg-card/20 backdrop-blur-sm">
         <div className="flex items-center space-x-2">
           <div className="w-6 h-6 text-muted-foreground">
-            {channel.type === 'announcement' ? '📢' : '#'}
+            #
           </div>
-          <h1 className="text-lg font-semibold text-foreground">{channel.name}</h1>
-          {channel.description && (
-            <div className="hidden sm:block">
-              <span className="text-muted-foreground">•</span>
-              <span className="text-sm text-muted-foreground ml-2">{channel.description}</span>
-            </div>
-          )}
+          <h1 className="text-lg font-semibold text-foreground">{channelName}</h1>
         </div>
       </div>
 
       {/* Posts Feed */}
-      <div className="flex-1 flex flex-col overflow-y-auto" ref={feedRef}>
+      <div className="flex-1 flex flex-col overflow-y-auto min-h-0" ref={feedRef} style={{maxHeight: 'calc(100vh - 250px)'}}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex flex-col items-center space-y-4">
@@ -142,7 +137,7 @@ export function ServerPostFeed({ server, channel }: ServerPostFeedProps) {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">No posts yet</h3>
-                <p className="text-muted-foreground">Be the first to start a conversation in #{channel.name}!</p>
+                <p className="text-muted-foreground">Be the first to start a conversation in #{channelName}!</p>
               </div>
             </div>
           </div>
@@ -164,16 +159,19 @@ export function ServerPostFeed({ server, channel }: ServerPostFeedProps) {
       </div>
 
       {/* New Post Input */}
-      <div className="p-4 border-t border-border/30 dark:border-slate-700/30 bg-card/20 backdrop-blur-sm">
-        { (channel.type==='post' || channel.type==='announcement') && (
-           <div className="p-4 border-b border-border flex justify-end">
-             <button onClick={()=>setShowCreateModal(true)} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">New Post</button>
-           </div>
-        )}
+      <div className="p-2 border-t border-border/30 dark:border-slate-700/30 bg-card/20 backdrop-blur-sm flex-shrink-0">
+        <div className="flex justify-center">
+          <button 
+            onClick={() => setShowCreateModal(true)} 
+            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium shadow-sm hover:shadow-md"
+          >
+            Create New Post
+          </button>
+        </div>
       </div>
 
       {showCreateModal && (
-        <PostCreationModal serverId={server.id} channelId={channel.id} onCreated={(post)=>setPosts(prev=>[...prev,post])} onClose={()=>setShowCreateModal(false)} />
+        <PostCreationModal serverId={serverId} channelId={channelId} onCreated={(post)=>setPosts(prev=>[...prev,post])} onClose={()=>setShowCreateModal(false)} />
       )}
     </div>
   );

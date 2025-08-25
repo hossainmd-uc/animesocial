@@ -223,11 +223,17 @@ export default function EditPostModal({ post, isOpen, onClose, onPostUpdated }: 
             <button
               type="submit"
               disabled={!content.trim() || isSubmitting}
-              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2"
+              className={`px-6 py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 ${
+                isDarkMode
+                  ? 'bg-primary text-white'
+                  : 'bg-primary text-black'
+              }`}
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <div className={`animate-spin rounded-full h-4 w-4 border-b-2 ${
+                    isDarkMode ? 'border-white' : 'border-black'
+                  }`}></div>
                   <span>Updating...</span>
                 </>
               ) : (

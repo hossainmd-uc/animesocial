@@ -73,11 +73,10 @@ export default function Header() {
       href: '/discover',
       icon: (
         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2H4zm0 2v6h12V7H4z" clipRule="evenodd" />
-          <path d="M6 16h8v1H6v-1z" />
+          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
         </svg>
       ),
-      label: 'Discover'
+      label: 'Profiles'
     },
     {
       href: '/watchlist',
@@ -102,11 +101,12 @@ export default function Header() {
       href: '/animes',
       icon: (
         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+          <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2H4zm0 2v6h12V7H4z" clipRule="evenodd" />
+          <path d="M6 16h8v1H6v-1z" />
         </svg>
       ),
       label: 'Browse',
-      hideOnMobile: true
+      hideOnMobile: false
     }
   ]
 
@@ -160,7 +160,9 @@ export default function Header() {
               : 'bg-white/40'
           }`}>
             {navItems.map((item) => {
-              const isActive = pathname === item.href || (item.href === '/watchlist' && pathname === '/favorites')
+              const isActive = pathname === item.href || 
+                               (item.href === '/watchlist' && pathname === '/favorites') ||
+                               (item.href === '/discover' && pathname.startsWith('/discover/'))
               return (
                 <Link
                   key={item.href}
@@ -269,9 +271,11 @@ export default function Header() {
             <div className="section-padding py-4">
               {/* Mobile Navigation Items */}
               <nav className="space-y-2 mb-4">
-                {navItems.filter(item => !item.hideOnMobile).map((item) => {
-                  const isActive = pathname === item.href || (item.href === '/watchlist' && pathname === '/favorites')
-                  return (
+                              {navItems.filter(item => !item.hideOnMobile).map((item) => {
+                const isActive = pathname === item.href || 
+                                 (item.href === '/watchlist' && pathname === '/favorites') ||
+                                 (item.href === '/discover' && pathname.startsWith('/discover/'))
+                return (
                     <Link
                       key={item.href}
                       href={item.href}

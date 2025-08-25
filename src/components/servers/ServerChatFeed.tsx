@@ -11,11 +11,14 @@ import ChatReplyInput from '../chat/ChatReplyInput';
 import Avatar from '../ui/Avatar';
 
 interface Props {
-  server: ServerWithDetails;
-  channel: ServerChannel;
+  serverId: string;
+  channelId: string;
+  channelName: string;
 }
 
-export default function ServerChatFeed({ server, channel }: Props) {
+export default function ServerChatFeed({ serverId, channelId, channelName }: Props) {
+  console.log('🔥 COMPONENT RENDERING - channelId:', channelId);
+  
   const [messages, setMessages] = useState<ServerMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -28,9 +31,10 @@ export default function ServerChatFeed({ server, channel }: Props) {
   const { isDarkMode, mounted } = useDarkMode();
 
   useEffect(() => {
+    console.log('🚀 ServerChatFeed component mounted, channel ID:', channelId);
     loadMessages();
     const unsub = subscribeToServerMessages(
-      channel.id,
+      channelId,
       (msg) => {
         // If message exists, update it; else append and sort
         setMessages((prev) => {
@@ -53,7 +57,7 @@ export default function ServerChatFeed({ server, channel }: Props) {
     );
     return () => unsub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channel.id]);
+  }, [channelId]);
 
   // Fetch current user id once
   useEffect(() => {
@@ -66,7 +70,7 @@ export default function ServerChatFeed({ server, channel }: Props) {
   const loadMessages = async () => {
     setLoading(true);
     try {
-      const msgs = await getChannelMessages(channel.id, 100);
+      const msgs = await getChannelMessages(channelId, 100);
 
       // Sort messages chronologically (oldest first, newest last)
       const sortedMsgs = msgs.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
@@ -101,8 +105,8 @@ export default function ServerChatFeed({ server, channel }: Props) {
   const handleSend = async () => {
     if (!newMessage.trim()) return;
     const created = await createMessage({
-      server_id: server.id,
-      channel_id: channel.id,
+      server_id: serverId,
+      channel_id: channelId,
       content: newMessage.trim(),
     });
     if (created) {
@@ -128,7 +132,7 @@ export default function ServerChatFeed({ server, channel }: Props) {
 
   const handleSendReply = async (content: string, parentId: string) => {
     try {
-      const reply = await replyToMessage(channel.id, parentId, content);
+      const reply = await replyToMessage(channelId, parentId, content);
       setReplyingTo(null);
       
       if (reply) {
@@ -210,13 +214,17 @@ export default function ServerChatFeed({ server, channel }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-9/10 overflow-hidden">
       {/* messages */}
-      <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
         {loading ? (
           <p className="text-center text-muted-foreground">Loading…</p>
+        ) : messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-center text-muted-foreground">No messages yet. Start the conversation!</p>
+          </div>
         ) : (
-                  messages.map((m) => {
+          messages.map((m) => {
           const parentMessage = m.parent_id ? messages.find(msg => msg.id === m.parent_id) : null;
           const replyCount = messages.filter(reply => reply.parent_id === m.id).length;
           
@@ -272,7 +280,7 @@ export default function ServerChatFeed({ server, channel }: Props) {
       />
 
       {/* input */}
-      <div className="border-t p-4">
+      <div className="border-t p-2 flex-shrink-0">
         <div className="flex gap-2">
           <input
             type="text"

@@ -3,7 +3,19 @@ import { prisma } from '@/lib/prisma';
 import { createClient } from '../../../../lib/supabase/server';
 
 // Helper to format message with author info the same way other endpoints do
-function formatMessage(m: any) {
+function formatMessage(m: {
+  id: string;
+  channelId: string;
+  authorId: string;
+  content: string;
+  parentId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  author?: {
+    username: string;
+    avatarUrl: string | null;
+  } | null;
+}) {
   return {
     id: m.id,
     channel_id: m.channelId,

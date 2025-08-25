@@ -300,11 +300,17 @@ export default function PostDetailModal({ postId, isOpen, onClose }: Props) {
                     <button
                       type="submit"
                       disabled={!replyContent.trim() || submittingReply}
-                      className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 text-sm"
+                      className={`px-3 py-1.5 rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 text-sm ${
+                        isDarkMode
+                          ? 'bg-primary text-white'
+                          : 'bg-primary text-black'
+                      }`}
                     >
                       {submittingReply ? (
                         <>
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                          <div className={`animate-spin rounded-full h-3 w-3 border-b-2 ${
+                            isDarkMode ? 'border-white' : 'border-black'
+                          }`}></div>
                           <span>Posting...</span>
                         </>
                       ) : (

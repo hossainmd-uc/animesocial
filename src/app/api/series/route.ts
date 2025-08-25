@@ -14,7 +14,12 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause for search
-    const whereClause: any = {};
+    const whereClause: {
+      OR?: Array<
+        | { title: { contains: string; mode: 'insensitive' } }
+        | { titleEnglish: { contains: string; mode: 'insensitive' } }
+      >;
+    } = {};
     if (search) {
       whereClause.OR = [
         { title: { contains: search, mode: 'insensitive' } },

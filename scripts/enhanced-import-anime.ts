@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import * as readline from 'readline';
 import { 
   extractBaseTitle, 
   determineSeriesType, 
@@ -10,6 +11,21 @@ import {
 } from '../src/lib/series-detection';
 
 const prisma = new PrismaClient();
+
+// Setup readline interface for user input
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+// Helper function to ask user questions
+function askUser(question: string): Promise<string> {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer.trim());
+    });
+  });
+}
 
 interface ImportProgress {
   currentPage: number;
@@ -20,7 +36,7 @@ interface ImportProgress {
 
 const PROGRESS_FILE = path.join(__dirname, 'enhanced-import-progress.json');
 const DELAY_BETWEEN_REQUESTS = 400; // 400ms delay to respect rate limit
-const TARGET_ANIME_COUNT = 50; // Target number of anime to import
+// Removed TARGET_ANIME_COUNT - will run continuously until manually stopped
 
 // Helper function to delay execution
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -44,43 +60,395 @@ async function findOrCreateSeries(animeData: any): Promise<string | null> {
     const baseTitle = extractBaseTitle(animeData.title);
     const normalizedTitle = normalizeTitle(animeData.title);
     
-    // First, check if we already have a series for this anime through existing relations
-    const existingAnime = await prisma.anime.findMany({
-      where: {
-        OR: [
-          { malId: { in: animeData.relations?.flatMap((rel: any) => 
-            rel.entry?.filter((e: any) => e.type === 'anime').map((e: any) => e.mal_id) || []
-          ) || [] }},
-        ]
-      },
-      include: {
-        series: true
+    // First, check relationships and use MAL relationship data to make smart decisions
+    if (animeData.relations && animeData.relations.length > 0) {
+      for (const relationGroup of animeData.relations) {
+        const relationType = relationGroup.relation;
+        const relatedAnimeIds = relationGroup.entry?.filter((e: any) => e.type === 'anime').map((e: any) => e.mal_id) || [];
+        
+        if (relatedAnimeIds.length > 0) {
+          // Check if any related anime are already in our database
+          const existingRelatedAnime = await prisma.anime.findMany({
+            where: { malId: { in: relatedAnimeIds } },
+            include: { series: true }
+          });
+          
+          const relatedWithSeries = existingRelatedAnime.filter(a => a.series);
+          
+          if (relatedWithSeries.length > 0) {
+            const existingSeries = relatedWithSeries[0].series!;
+            const currentTitle = animeData.title;
+            const currentYear = animeData.year;
+            
+            console.log(`  🔗 Found related anime through "${relationType}" relationship`);
+            console.log(`  📺 Related: "${relatedWithSeries[0].title}" in series "${existingSeries.title}"`);
+            console.log(`  📅 Current: "${currentTitle}" (${currentYear || 'Unknown'})`);
+            
+            // Use relationship type to determine if we should rename the series
+            let shouldRename = false;
+            let reason = '';
+            
+            if (relationType === 'Sequel') {
+              // Check if current anime is older than the earliest in the existing series
+              const seriesAnime = await prisma.anime.findMany({
+                where: { seriesId: existingSeries.id },
+                select: { year: true }
+              });
+              const seriesYears = seriesAnime.map(a => a.year).filter(Boolean) as number[];
+              const earliestSeriesYear = seriesYears.length > 0 ? Math.min(...seriesYears) : null;
+              
+              if (currentYear && earliestSeriesYear && currentYear < earliestSeriesYear) {
+                shouldRename = true;
+                reason = 'current anime is older (original in sequel relationship)';
+              } else {
+                shouldRename = false;
+                reason = 'existing series has older anime (keeping original series name)';
+              }
+            } else if (relationType === 'Prequel') {
+              // Current anime is a prequel → add to existing series without rename
+              shouldRename = false;
+              reason = 'current anime is a prequel';
+            } else if (relationType === 'Alternative Version' || relationType === 'Side Story') {
+              // Check year as tiebreaker for alternative versions
+              const seriesAnime = await prisma.anime.findMany({
+                where: { seriesId: existingSeries.id },
+                select: { year: true }
+              });
+              const seriesYears = seriesAnime.map(a => a.year).filter(Boolean) as number[];
+              const earliestSeriesYear = seriesYears.length > 0 ? Math.min(...seriesYears) : null;
+              
+              if (currentYear && earliestSeriesYear && currentYear < earliestSeriesYear) {
+                shouldRename = true;
+                reason = 'current anime is older alternative version';
+              } else if (currentYear && !earliestSeriesYear) {
+                // If existing series has no year data but current anime does, assume current is likely original
+                shouldRename = true;
+                reason = 'current anime has year data, existing series does not (likely original)';
+              } else {
+                shouldRename = false;
+                reason = 'current anime is newer alternative/side story';
+              }
+            } else {
+              // For other relationships (Parent Story, Full Story, etc.), use year comparison
+              const seriesAnime = await prisma.anime.findMany({
+                where: { seriesId: existingSeries.id },
+                select: { year: true }
+              });
+              const seriesYears = seriesAnime.map(a => a.year).filter(Boolean) as number[];
+              const earliestSeriesYear = seriesYears.length > 0 ? Math.min(...seriesYears) : null;
+              
+              if (currentYear && earliestSeriesYear && currentYear < earliestSeriesYear) {
+                shouldRename = true;
+                reason = 'current anime is older';
+              } else if (currentYear && !earliestSeriesYear) {
+                // If existing series has no year data but current anime does, assume current is likely original
+                shouldRename = true;
+                reason = 'current anime has year data, existing series does not (likely original)';
+              } else {
+                shouldRename = false;
+                reason = 'current anime is newer or same age';
+              }
+            }
+            
+            if (shouldRename) {
+              console.log(`  🔄 Renaming series to "${currentTitle}" (${reason})`);
+              
+              await prisma.animeSeries.update({
+                where: { id: existingSeries.id },
+                data: {
+                  title: animeData.title,
+                  titleEnglish: animeData.title_english,
+                  titleJapanese: animeData.title_japanese,
+                  isMainEntry: true,
+                  description: animeData.synopsis || existingSeries.description,
+                  imageUrl: animeData.images.jpg.large_image_url || existingSeries.imageUrl
+                }
+              });
+              
+              console.log(`  ✅ Renamed series from "${existingSeries.title}" to "${currentTitle}"`);
+            } else {
+              console.log(`  ✅ Adding to existing series "${existingSeries.title}" (${reason})`);
+            }
+            
+            return existingSeries.id;
+          }
+        }
       }
-    });
-    
-    // If we find related anime that already have a series, use that series
-    const relatedWithSeries = existingAnime.filter(a => a.series);
-    if (relatedWithSeries.length > 0) {
-      console.log(`  🔗 Found existing series for related anime: ${relatedWithSeries[0].series?.title}`);
-      return relatedWithSeries[0].seriesId;
     }
     
-    // Look for existing series with similar title
-    const existingSeries = await prisma.animeSeries.findMany({
-      where: {
-        OR: [
-          { title: { contains: baseTitle, mode: 'insensitive' } },
-          { titleEnglish: { contains: baseTitle, mode: 'insensitive' } }
-        ]
+    // Fallback: Use similarity detection when no direct relationships found
+    console.log(`  🔍 No direct relationships found, checking title similarity...`);
+    
+    // Extract core words from title for similarity detection
+    function extractCoreWords(title: string): string[] {
+      return title
+        .toLowerCase()
+        .replace(/[°':!?.,()-]/g, ' ') // Remove special characters
+        .replace(/\b(the|and|or|of|in|on|at|to|for|with|by|no|hen|wa)\b/g, ' ') // Remove common words including Japanese
+        .split(/\s+/)
+        .filter(word => word.length > 2) // Keep words longer than 2 characters
+        .filter(word => !['season', 'part', 'final', 'new', 'movie', 'ova', 'special', 'episode'].includes(word)); // Remove anime-specific words
+    }
+    
+    // Calculate similarity between two titles based on shared core words
+    function calculateSimilarity(title1: string, title2: string): number {
+      const words1 = extractCoreWords(title1);
+      const words2 = extractCoreWords(title2);
+      
+      if (words1.length === 0 || words2.length === 0) return 0;
+      
+      const sharedWords = words1.filter(word => words2.includes(word));
+      const maxWords = Math.max(words1.length, words2.length);
+      
+      return sharedWords.length / maxWords;
+    }
+    
+    // Get all existing series to check for similarities
+    const allSeries = await prisma.animeSeries.findMany({
+      include: {
+        animes: {
+          select: {
+            title: true,
+            year: true,
+            episodes: true
+          },
+          orderBy: { year: 'asc' }
+        }
       }
     });
     
-    // Check for title similarity
-    for (const series of existingSeries) {
-      const seriesBaseTitle = extractBaseTitle(series.title);
-      if (seriesBaseTitle === baseTitle) {
-        console.log(`  🔗 Found existing series: ${series.title}`);
+    const currentTitle = animeData.title.trim();
+    const currentYear = animeData.year;
+    const currentSeriesType = determineSeriesType(animeData);
+    
+    // Find similar series based on core words
+    const similarSeries = [];
+    for (const series of allSeries) {
+      const similarity = calculateSimilarity(currentTitle, series.title);
+      if (similarity > 0.4) { // 40% similarity threshold
+        similarSeries.push({ series, similarity });
+      }
+    }
+    
+    if (similarSeries.length > 0) {
+      console.log(`  🤔 Found ${similarSeries.length} potentially related series through similarity`);
+      
+      // Sort by similarity and get the earliest year for each series
+      similarSeries.sort((a, b) => b.similarity - a.similarity);
+      
+      for (const { series, similarity } of similarSeries) {
+        const years = series.animes.map(a => a.year).filter(Boolean) as number[];
+        const earliestYear = years.length > 0 ? Math.min(...years) : null;
+        
+        console.log(`    📺 "${series.title}" (${earliestYear || 'Unknown'}) - similarity: ${similarity.toFixed(2)}`);
+        
+        // Calculate word-based substring match percentage
+        function calculateWordBasedMatch(title1: string, title2: string): number {
+          // Split into words and clean them
+          function getWords(title: string): string[] {
+            return title
+              .toLowerCase()
+              .replace(/[°':!?.,()-]/g, ' ')
+              .split(/\s+/)
+              .filter(word => word.length > 0);
+          }
+          
+          const words1 = getWords(title1);
+          const words2 = getWords(title2);
+          
+          // Find which has fewer words (shorter)
+          const shorterWords = words1.length <= words2.length ? words1 : words2;
+          const longerWords = words1.length <= words2.length ? words2 : words1;
+          
+          // Count how many words from shorter are contained in longer
+          const matchedWords = shorterWords.filter(word => 
+            longerWords.some(longerWord => 
+              longerWord.includes(word) || word.includes(longerWord)
+            )
+          );
+          
+          // Return percentage of shorter title's words that match
+          return shorterWords.length > 0 ? matchedWords.length / shorterWords.length : 0;
+        }
+        
+        const substringMatchPercentage = calculateWordBasedMatch(currentTitle, series.title);
+        console.log(`    🔍 Word match: ${(substringMatchPercentage * 100).toFixed(1)}%`);
+        
+        // Only auto-assign if:
+        // 1. High core word similarity (>80%)  
+        // 2. AND perfect word match (100%) - only when all words from shorter title are in longer
+        // 3. AND shorter title has ≤2 words (to avoid complex cases)
+        const shorterWordCount = Math.min(
+          currentTitle.split(/\s+/).length, 
+          series.title.split(/\s+/).length
+        );
+        const isSimpleCase = substringMatchPercentage >= 1.0 && shorterWordCount <= 2;
+        
+        if (similarity > 0.8 && isSimpleCase) {
+          let shouldRename = false;
+          let reason = '';
+          
+          if (currentYear && earliestYear && currentYear < earliestYear) {
+            shouldRename = true;
+            reason = 'current anime is older';
+          } else if (currentTitle.length < series.title.length && currentSeriesType === 'main') {
+            shouldRename = true;
+            reason = 'current title is more generic';
+          } else {
+            shouldRename = false;
+            reason = 'adding to existing series';
+          }
+          
+          if (shouldRename) {
+            console.log(`    🔄 Auto-renaming series to "${currentTitle}" (${reason}, similarity: ${similarity.toFixed(2)})`);
+            
+            await prisma.animeSeries.update({
+              where: { id: series.id },
+              data: {
+                title: animeData.title,
+                titleEnglish: animeData.title_english,
+                titleJapanese: animeData.title_japanese,
+                isMainEntry: true,
+                description: animeData.synopsis || series.description,
+                imageUrl: animeData.images.jpg.large_image_url || series.imageUrl
+              }
+            });
+            
+            console.log(`    ✅ Renamed series from "${series.title}" to "${currentTitle}"`);
+          } else {
+            console.log(`    ✅ Auto-adding to existing series "${series.title}" (${reason}, similarity: ${similarity.toFixed(2)})`);
+          }
+          
+          return series.id;
+        } else if (similarity > 0.4) {
+          console.log(`    🤔 High similarity (${similarity.toFixed(2)}) but complex case - will ask user`);
+          
+          // Add this series to complex cases that need user decision
+          const years = series.animes.map(a => a.year).filter(Boolean) as number[];
+          const earliestYear = years.length > 0 ? Math.min(...years) : null;
+          
+          // Present user choice for this complex case
+          console.log(`\n🎬 Processing: "${currentTitle}" (${currentYear || 'Unknown'})`);
+          console.log(`📝 Found complex similarity match. What should we do?\n`);
+          
+          console.log(`0️⃣  Create new series: "${currentTitle}"`);
+          console.log(`1️⃣  Add to existing: "${series.title}" (${earliestYear || 'Unknown'})`);
+          console.log(`2️⃣  Rename "${series.title}" → "${currentTitle}" and add (${earliestYear || 'Unknown'} → ${currentYear || 'Unknown'})`);
+          
+          const choice = await askUser('\nYour choice (number): ');
+          const choiceNum = parseInt(choice);
+          
+          if (choiceNum === 1) {
+            console.log(`    ✅ Adding to existing series: "${series.title}"`);
+            return series.id;
+          } else if (choiceNum === 2) {
+            console.log(`    🔄 Renaming series from "${series.title}" to "${currentTitle}"`);
+            
+            await prisma.animeSeries.update({
+              where: { id: series.id },
+              data: {
+                title: animeData.title,
+                titleEnglish: animeData.title_english,
+                titleJapanese: animeData.title_japanese,
+                isMainEntry: true,
+                description: animeData.synopsis || series.description,
+                imageUrl: animeData.images.jpg.large_image_url || series.imageUrl
+              }
+            });
+            
+            console.log(`    ✅ Renamed series to "${currentTitle}"`);
         return series.id;
+          } else {
+            console.log(`    ✅ Creating new series as requested`);
+            // Continue to create new series
+          }
+        }
+      }
+      
+
+    }
+    
+    // Always check for partial matches if no high-similarity matches were processed
+    if (similarSeries.length === 0) {
+      console.log(`    ⚠️  No high similarity matches found, checking for partial matches...`);
+      
+      // Check for partial matches that might need user input
+      const partialMatches = [];
+      for (const series of allSeries) {
+        const seriesCore = extractCoreWords(series.title);
+        const currentCore = extractCoreWords(currentTitle);
+        
+        // Check if any core words from either title appear in the other, OR simple substring match
+        const hasSharedCoreWords = seriesCore.some(word => 
+          currentCore.includes(word) || currentTitle.toLowerCase().includes(word)
+        ) || currentCore.some(word => 
+          seriesCore.includes(word) || series.title.toLowerCase().includes(word)
+        ) || (
+          // Simple substring check for cases like "Gintama" in "Gintama. Shirogane..."
+          currentTitle.toLowerCase().includes(series.title.toLowerCase()) ||
+          series.title.toLowerCase().includes(currentTitle.toLowerCase())
+        );
+        
+        if (hasSharedCoreWords) {
+          const years = series.animes.map(a => a.year).filter(Boolean) as number[];
+          const earliestYear = years.length > 0 ? Math.min(...years) : null;
+          partialMatches.push({ series, earliestYear });
+        }
+      }
+      
+      if (partialMatches.length > 0) {
+        console.log(`    🤔 Found ${partialMatches.length} series with shared core words, asking user...`);
+        
+        // Present options to user
+        console.log(`\n🎬 Processing: "${currentTitle}" (${currentYear || 'Unknown'})`);
+        console.log(`📝 Found potentially related series. What should we do?\n`);
+        
+        // Option 0: Create new series
+        console.log(`0️⃣  Create new series: "${currentTitle}"`);
+        
+        // Options 1+: Add to existing series
+        partialMatches.forEach(({ series, earliestYear }, index) => {
+          console.log(`${index + 1}️⃣  Add to existing: "${series.title}" (${earliestYear || 'Unknown'})`);
+        });
+        
+        // Rename options
+        partialMatches.forEach(({ series, earliestYear }, index) => {
+          const optionNum = partialMatches.length + 1 + index;
+          console.log(`${optionNum}️⃣  Rename "${series.title}" → "${currentTitle}" and add (${earliestYear || 'Unknown'} → ${currentYear || 'Unknown'})`);
+        });
+        
+        const choice = await askUser('\nYour choice (number): ');
+        const choiceNum = parseInt(choice);
+        
+        if (choiceNum === 0) {
+          console.log(`    ✅ Creating new series as requested`);
+        } else if (choiceNum >= 1 && choiceNum <= partialMatches.length) {
+          // Add to existing series
+          const selectedSeries = partialMatches[choiceNum - 1].series;
+          console.log(`    ✅ Adding to existing series: "${selectedSeries.title}"`);
+          return selectedSeries.id;
+        } else if (choiceNum > partialMatches.length && choiceNum <= partialMatches.length * 2) {
+          // Rename series
+          const selectedSeries = partialMatches[choiceNum - partialMatches.length - 1].series;
+          console.log(`    🔄 Renaming series from "${selectedSeries.title}" to "${currentTitle}"`);
+          
+          await prisma.animeSeries.update({
+            where: { id: selectedSeries.id },
+            data: {
+              title: animeData.title,
+              titleEnglish: animeData.title_english,
+              titleJapanese: animeData.title_japanese,
+              isMainEntry: true,
+              description: animeData.synopsis || selectedSeries.description,
+              imageUrl: animeData.images.jpg.large_image_url || selectedSeries.imageUrl
+            }
+          });
+          
+          console.log(`    ✅ Renamed series to "${currentTitle}"`);
+          return selectedSeries.id;
+        } else {
+          console.log(`    ⚠️  Invalid choice, creating new series`);
+        }
       }
     }
     
@@ -373,8 +741,10 @@ function parseTheme(theme: string): [string, string | null] {
 // Main import function
 async function importAllAnimeWithSeries() {
   const progress = loadProgress();
-  console.log(`🚀 Starting enhanced anime import with series detection`);
+  console.log(`🚀 Starting continuous enhanced anime import with series detection`);
   console.log(`📊 Resuming from page ${progress.currentPage}`);
+  console.log(`⚠️  This will run continuously until manually stopped (Ctrl+C)`);
+  console.log(`📝 Progress is saved automatically and can be resumed if interrupted`);
 
   try {
     while (true) {
@@ -386,16 +756,10 @@ async function importAllAnimeWithSeries() {
 
       // Process each anime on the page
       for (const anime of data) {
-        // Check if we've reached our target
-        if (progress.processedIds.length >= TARGET_ANIME_COUNT) {
-          console.log(`\n🎯 Target of ${TARGET_ANIME_COUNT} anime reached!`);
-          break;
-        }
-
         if (!progress.processedIds.includes(anime.mal_id)) {
           await delay(DELAY_BETWEEN_REQUESTS);
           
-          console.log(`\n🎬 Processing ${progress.processedIds.length + 1}/${TARGET_ANIME_COUNT}: ${anime.title} (MAL ID: ${anime.mal_id})`);
+          console.log(`\n🎬 Processing #${progress.processedIds.length + 1}: ${anime.title} (MAL ID: ${anime.mal_id})`);
           const success = await importAnimeWithSeries(anime.mal_id);
           
           if (success) {
@@ -405,12 +769,12 @@ async function importAllAnimeWithSeries() {
           }
           
           saveProgress(progress);
+          
+          // Show progress every 10 anime
+          if (progress.processedIds.length % 10 === 0) {
+            console.log(`\n📊 Progress Update: ${progress.processedIds.length} anime processed so far`);
+          }
         }
-      }
-
-      // Break out of the page loop if we've reached our target
-      if (progress.processedIds.length >= TARGET_ANIME_COUNT) {
-        break;
       }
 
       // Move to next page
@@ -426,7 +790,7 @@ async function importAllAnimeWithSeries() {
       await delay(DELAY_BETWEEN_REQUESTS);
     }
 
-    console.log('\n🎉 Enhanced import completed!');
+    console.log('\n🎉 Enhanced import completed (all pages processed)!');
     console.log(`📊 Final Statistics:`);
     console.log(`   • Processed ${progress.processedIds.length} anime successfully`);
     console.log(`   • Failed to process ${progress.failedIds.length} anime`);
@@ -435,13 +799,14 @@ async function importAllAnimeWithSeries() {
     const totalSeries = await prisma.animeSeries.count();
     const totalAnime = await prisma.anime.count();
     
-    console.log(`   • Created ${totalSeries} series`);
+    console.log(`   • Total series in database: ${totalSeries}`);
     console.log(`   • Total anime in database: ${totalAnime}`);
 
   } catch (error) {
     console.error('❌ Error during enhanced import:', error);
     throw error;
   } finally {
+    rl.close();
     await prisma.$disconnect();
   }
 }

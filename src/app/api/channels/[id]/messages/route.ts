@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '../../../../../lib/supabase/server';
+import { createBrowserClient } from '@supabase/ssr';
 
 // GET /api/channels/[id]/messages?limit=&before=
 export async function GET(
@@ -13,7 +14,10 @@ export async function GET(
     const limit = Number(searchParams.get('limit') || 50);
     const before = searchParams.get('before');
 
-    const where: any = { channelId };
+    const where: {
+      channelId: string;
+      createdAt?: { lt: Date };
+    } = { channelId };
     if (before) {
       where.createdAt = { lt: new Date(before) };
     }
@@ -34,7 +38,7 @@ export async function GET(
       channel_id: m.channelId,
       author_id: m.authorId,
       content: m.content,
-      parent_id: (m as any).parentId || null,
+      parent_id: m.parentId || null,
       created_at: m.createdAt.toISOString(),
       updated_at: m.updatedAt.toISOString(),
       author: {
@@ -86,7 +90,7 @@ export async function POST(
       channel_id: message.channelId,
       author_id: message.authorId,
       content: message.content,
-      parent_id: (message as any).parentId || null,
+      parent_id: message.parentId || null,
       created_at: message.createdAt.toISOString(),
       updated_at: message.updatedAt.toISOString(),
       author: {
@@ -94,6 +98,22 @@ export async function POST(
         avatar_url: message.author?.avatarUrl,
       },
     };
+
+    // Broadcast the new message to all subscribers
+    // Use browser client for realtime (same as frontend)
+    const broadcastClient = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    
+    console.log('📡 API sending broadcast for channel:', channelId);
+    const channel = broadcastClient.channel(`channel_${channelId}`);
+    await channel.send({
+      type: 'broadcast',
+      event: 'new_message',
+      payload: { message: formatted }
+    });
+    console.log('✅ Broadcast sent successfully');
 
     return NextResponse.json(formatted);
   } catch (err) {

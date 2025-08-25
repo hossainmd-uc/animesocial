@@ -7,7 +7,7 @@ import { useDarkMode } from '@/src/hooks/useDarkMode'
 interface Server {
   id: string
   name: string
-  icon?: string
+  icon_url?: string
 }
 
 interface ServerSidebarProps {
@@ -49,16 +49,18 @@ export function ServerSidebar({
             onClick={() => onServerSelect(server.id)}
             onMouseEnter={() => setHoveredServer(server.id)}
             onMouseLeave={() => setHoveredServer(null)}
-            className={`w-12 h-12 rounded-2xl transition-all duration-300 flex items-center justify-center text-white font-bold text-lg hover:rounded-xl group relative ${
+            className={`w-10 h-10 rounded-2xl transition-all duration-300 flex items-center justify-center font-bold text-lg hover:rounded-xl group relative ${
               currentServerId === server.id
-                ? 'bg-blue-600 rounded-xl scale-110'
+                ? isDarkMode
+                  ? 'bg-slate-600 rounded-xl ring-2 ring-slate-400/50 text-white'
+                  : 'bg-gray-400 rounded-xl ring-2 ring-gray-700/80 text-white'
                 : isDarkMode
                   ? 'bg-slate-700/80 text-foreground hover:bg-primary/20 hover:bg-slate-600'
                   : 'bg-card/80 text-foreground hover:bg-primary/20 hover:bg-gray-100'
             }`}
           >
-            {server.icon ? (
-              <img src={server.icon} alt={server.name} className="w-8 h-8 rounded-lg" />
+            {server.icon_url ? (
+              <img src={server.icon_url} alt={server.name} className="w-9/10 h-9/10 rounded-2xl object-cover" />
             ) : (
               server.name.charAt(0).toUpperCase()
             )}
@@ -87,7 +89,7 @@ export function ServerSidebar({
       ))}
 
       {/* Separator */}
-      <div className={`w-8 h-px my-2 ${
+      <div className={`w-10 h-px my-2 ${
         isDarkMode ? 'bg-slate-600/50' : 'bg-border/50'
       }`}></div>
 
@@ -97,7 +99,7 @@ export function ServerSidebar({
           onClick={onCreateServer}
           onMouseEnter={() => setHoveredServer('create')}
           onMouseLeave={() => setHoveredServer(null)}
-          className={`w-12 h-12 rounded-2xl hover:rounded-xl transition-all duration-300 flex items-center justify-center group border-2 border-dashed hover:border-green-500/50 ${
+          className={`w-10 h-10 rounded-2xl hover:rounded-xl transition-all duration-300 flex items-center justify-center group border-2 border-dashed hover:border-green-500/50 ${
             isDarkMode
               ? 'bg-slate-700/80 hover:bg-green-500/20 border-slate-600/50'
               : 'bg-card/80 hover:bg-green-500/20 border-border/50'
@@ -132,7 +134,7 @@ export function ServerSidebar({
           onClick={onJoinServer}
           onMouseEnter={() => setHoveredServer('join')}
           onMouseLeave={() => setHoveredServer(null)}
-          className={`w-12 h-12 rounded-2xl hover:rounded-xl transition-all duration-300 flex items-center justify-center group border-2 border-dashed hover:border-blue-500/50 ${
+          className={`w-10 h-10 rounded-2xl hover:rounded-xl transition-all duration-300 flex items-center justify-center group border-2 border-dashed hover:border-blue-500/50 ${
             isDarkMode
               ? 'bg-slate-700/80 hover:bg-blue-500/20 border-slate-600/50'
               : 'bg-card/80 hover:bg-blue-500/20 border-border/50'

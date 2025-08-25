@@ -97,7 +97,7 @@ export function ChannelSidebar({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-9/10">
       {/* Server Header */}
       <div className={`p-4 border-b ${
         isDarkMode ? 'border-slate-700/30' : 'border-border/30'

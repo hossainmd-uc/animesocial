@@ -11,6 +11,7 @@ import { organizeReplies } from '../../utils/replyUtils';
 import NestedReplyThread from './NestedReplyThread';
 import EditPostModal from './EditPostModal';
 import Avatar from '../ui/Avatar';
+import Link from 'next/link';
 
 interface Props {
   postId: string;
@@ -176,7 +177,7 @@ export default function PostDetailView({ postId, onBack }: Props) {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full overflow-hidden">
         {/* Header with Back Button */}
         <div className="flex items-center p-4 border-b border-border/30 dark:border-slate-700/30 bg-card/20 backdrop-blur-sm">
           <button
@@ -208,7 +209,7 @@ export default function PostDetailView({ postId, onBack }: Props) {
 
   if (error || !post) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full overflow-hidden">
         {/* Header with Back Button */}
         <div className="flex items-center p-4 border-b border-border/30 dark:border-slate-700/30 bg-card/20 backdrop-blur-sm">
           <button
@@ -250,7 +251,7 @@ export default function PostDetailView({ postId, onBack }: Props) {
   const isOwner = user && post.author_id === user.id;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-9/10 overflow-hidden">
       {/* Header with Back Button */}
       <div className="flex items-center p-4 border-b border-border/30 dark:border-slate-700/30 bg-card/20 backdrop-blur-sm">
         <button
@@ -271,7 +272,7 @@ export default function PostDetailView({ postId, onBack }: Props) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
         {/* Main Post */}
         <div className={`${
           isDarkMode ? 'bg-slate-700/50 border-slate-600' : 'bg-gray-50/50 border-gray-200'
@@ -279,17 +280,22 @@ export default function PostDetailView({ postId, onBack }: Props) {
           {/* Post Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <Avatar
-                src={post.author?.avatar_url}
-                username={post.author?.username || 'Unknown'}
-                size="md"
-              />
+              <Link href={`/discover/${post.author?.username || 'unknown'}`}>
+                <Avatar
+                  src={post.author?.avatar_url}
+                  username={post.author?.username || 'Unknown'}
+                  size="md"
+                />
+              </Link>
               <div>
-                <p className={`font-medium ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
+                <Link 
+                  href={`/discover/${post.author?.username || 'unknown'}`}
+                  className={`font-medium hover:underline transition-colors ${
+                    isDarkMode ? 'text-white hover:text-gray-200' : 'text-gray-900 hover:text-gray-700'
+                  }`}
+                >
                   {post.author?.username || 'Unknown'}
-                </p>
+                </Link>
                 <p className={`text-sm ${
                   isDarkMode ? 'text-gray-400' : 'text-gray-500'
                 }`}>
@@ -345,11 +351,18 @@ export default function PostDetailView({ postId, onBack }: Props) {
             </p>
             
             {post.image_url && (
-              <div className="rounded-lg overflow-hidden">
+              <div className="mt-4">
                 <img 
                   src={post.image_url} 
                   alt={post.title || 'post image'} 
-                  className="w-full object-cover max-h-64 rounded-lg" 
+                  className="max-w-full object-contain rounded-lg cursor-pointer hover:opacity-95 transition-opacity" 
+                  style={{ 
+                    maxHeight: '500px',
+                    width: 'auto',
+                    height: 'auto'
+                  }}
+                  loading="lazy"
+                  onClick={() => window.open(post.image_url, '_blank')}
                 />
               </div>
             )}
@@ -428,11 +441,17 @@ export default function PostDetailView({ postId, onBack }: Props) {
               <button
                 type="submit"
                 disabled={!replyContent.trim() || submittingReply}
-                className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 text-sm"
+                className={`px-3 py-1.5 rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 text-sm ${
+                  isDarkMode
+                    ? 'bg-primary text-white'
+                    : 'bg-primary text-black'
+                }`}
               >
                 {submittingReply ? (
                   <>
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                    <div className={`animate-spin rounded-full h-3 w-3 border-b-2 ${
+                      isDarkMode ? 'border-white' : 'border-black'
+                    }`}></div>
                     <span>Posting...</span>
                   </>
                 ) : (

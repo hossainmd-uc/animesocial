@@ -62,8 +62,10 @@ export default function CreateChannelModal({ serverId, defaultType, onClose, onC
         <div className="flex justify-end gap-3 pt-2">
           <button 
             onClick={onClose} 
-            className={`px-3 py-1 rounded text-sm ${
-              isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-gray-100'
+            className={`px-3 py-1 rounded text-sm transition-colors ${
+              isDarkMode 
+                ? 'text-slate-300 hover:bg-slate-700 hover:text-white' 
+                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
             }`}
           >
             Cancel
@@ -71,7 +73,11 @@ export default function CreateChannelModal({ serverId, defaultType, onClose, onC
           <button 
             disabled={loading} 
             onClick={handleSubmit} 
-            className="px-4 py-1 rounded bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
+            className={`px-4 py-1 rounded transition-colors disabled:opacity-50 ${
+              isDarkMode
+                ? 'bg-primary hover:bg-primary/90 text-white'
+                : 'bg-primary hover:bg-primary/90 text-black'
+            }`}
           >
             {loading?'Creating…':'Create'}
           </button>

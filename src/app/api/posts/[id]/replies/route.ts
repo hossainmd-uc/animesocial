@@ -80,7 +80,19 @@ export async function GET(
       SELECT * FROM reply_tree
       ORDER BY created_at ASC
       LIMIT ${limit} OFFSET ${offset}
-    ` as any[];
+    ` as Array<{
+      id: string;
+      server_id: string;
+      channel_id: string;
+      author_id: string;
+      content: string;
+      title: string;
+      image_url: string | null;
+      anime_id: string | null;
+      parent_id: string | null;
+      created_at: Date;
+      updated_at: Date;
+    }>;
 
     // Get the full post details for the reply IDs we found
     const replyIds = threadReplies.map(r => r.id);

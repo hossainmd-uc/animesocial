@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { User } from '@supabase/supabase-js'
 import ProfileEditForm from './ProfileEditForm'
 import AvatarUpload from './AvatarUpload'
@@ -10,9 +10,10 @@ import { useDarkMode } from '@/src/hooks/useDarkMode'
 interface ProfileCardProps {
   user: User
   profile: Profile | null
+  onProfileUpdate?: (updatedProfile: Profile) => void
 }
 
-export default function ProfileCard({ user, profile }: ProfileCardProps) {
+export default function ProfileCard({ user, profile, onProfileUpdate }: ProfileCardProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isEditingStatus, setIsEditingStatus] = useState(false)
   const [statusText, setStatusText] = useState(profile?.status || '')
@@ -23,6 +24,12 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
   
   const { isDarkMode, mounted } = useDarkMode()
 
+  // Sync local state when profile prop changes
+  useEffect(() => {
+    setStatusText(profile?.status || '')
+    setBioText(profile?.bio || '')
+  }, [profile?.status, profile?.bio])
+
   const handleStatusUpdate = async () => {
     setStatusLoading(true)
     try {
@@ -31,12 +38,12 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: statusText,
-                     // Include current profile data to avoid overwriting
-           username: profile?.username,
-           displayName: profile?.displayName,
-           bio: profile?.bio,
-           favoriteAnime: profile?.favoriteAnime,
-           avatarUrl: profile?.avatarUrl,
+          // Include current profile data to avoid overwriting
+          username: profile?.username,
+          displayName: profile?.displayName,
+          bio: profile?.bio,
+          favoriteAnime: profile?.favoriteAnime,
+          avatarUrl: profile?.avatarUrl,
         }),
       })
 
@@ -44,8 +51,17 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
         throw new Error('Failed to update status')
       }
 
+      const updatedProfile = await response.json()
+      
+      // Update local state instead of page refresh
       setIsEditingStatus(false)
-      window.location.reload() // Refresh to show updated data
+      if (onProfileUpdate && profile) {
+        onProfileUpdate({
+          ...profile,
+          status: statusText,
+          updatedAt: new Date()
+        })
+      }
     } catch (error) {
       console.error('Error updating status:', error)
       // Reset to original value on error
@@ -81,8 +97,17 @@ export default function ProfileCard({ user, profile }: ProfileCardProps) {
         throw new Error('Failed to update bio')
       }
 
+      const updatedProfile = await response.json()
+      
+      // Update local state instead of page refresh
       setIsEditingBio(false)
-      window.location.reload() // Refresh to show updated data
+      if (onProfileUpdate && profile) {
+        onProfileUpdate({
+          ...profile,
+          bio: bioText,
+          updatedAt: new Date()
+        })
+      }
     } catch (error) {
       console.error('Error updating bio:', error)
       // Reset to original value on error

@@ -11,7 +11,11 @@ export async function GET(request: Request) {
     const status = searchParams.get('status');
     const type = searchParams.get('type');
 
-    const where: any = {};
+    const where: {
+      OR?: Array<{ title: { contains: string; mode: 'insensitive' } } | { titleEnglish: { contains: string; mode: 'insensitive' } }>;
+      status?: string;
+      type?: string;
+    } = {};
 
     // Add search filter
     if (search) {
@@ -55,7 +59,20 @@ export async function GET(request: Request) {
         skip: offset,
       }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 15000))
-    ]) as any[];
+    ]) as Array<{
+      id: string;
+      malId: number;
+      title: string;
+      titleEnglish: string | null;
+      synopsis: string | null;
+      episodes: number | null;
+      score: number | null;
+      year: number | null;
+      status: string | null;
+      imageUrl: string | null;
+      type: string | null;
+      rating: string | null;
+    }>;
 
     return NextResponse.json(animes);
   } catch (error) {

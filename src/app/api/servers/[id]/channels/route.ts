@@ -15,7 +15,18 @@ export async function GET(
       orderBy: { position: 'asc' },
     });
 
-    const formatted = channels.map((c: any) => ({
+    const formatted = channels.map((c: {
+      id: string;
+      serverId: string;
+      name: string;
+      description: string | null;
+      type: string;
+      position: number;
+      isPrivate: boolean;
+      parentId: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+    }) => ({
       id: c.id,
       server_id: c.serverId,
       name: c.name,

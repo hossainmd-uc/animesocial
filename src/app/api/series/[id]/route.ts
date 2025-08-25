@@ -43,7 +43,24 @@ export async function GET(
       totalEpisodes: series.totalEpisodes,
       averageScore: series.averageScore,
       popularity: series.popularity,
-      animes: series.animes.map((anime: any) => ({
+      animes: series.animes.map((anime: {
+        id: string;
+        title: string;
+        titleEnglish: string | null;
+        synopsis: string | null;
+        status: string | null;
+        episodes: number | null;
+        score: number | null;
+        year: number | null;
+        type: string | null;
+        seriesType: string | null;
+        seriesOrder: number | null;
+        imageUrl: string | null;
+        trailerUrl: string | null;
+        genres: Array<{ genre: { id: string; name: string } }>;
+        streaming: Array<{ platformName: string; url: string }>;
+        externalLinks: Array<{ name: string; url: string }>;
+      }) => ({
         id: anime.id,
         title: anime.title,
         titleEnglish: anime.titleEnglish,
@@ -57,15 +74,15 @@ export async function GET(
         seriesOrder: anime.seriesOrder,
         imageUrl: anime.imageUrl,
         trailerUrl: anime.trailerUrl,
-        genres: anime.genres.map((g: any) => ({
+        genres: anime.genres.map((g) => ({
           id: g.genre.id,
           name: g.genre.name
         })),
-        streaming: anime.streaming.map((s: any) => ({
+        streaming: anime.streaming.map((s) => ({
           name: s.platformName,
           url: s.url
         })),
-        externalLinks: anime.externalLinks.map((l: any) => ({
+        externalLinks: anime.externalLinks.map((l) => ({
           name: l.name,
           url: l.url
         }))
